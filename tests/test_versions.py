@@ -7,12 +7,14 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from quarto_version_selector import versions as versions_module
 from quarto_version_selector.__main__ import cli
 from quarto_version_selector.deploy import alias, deploy, docs_worktree, set_default_version
 from quarto_version_selector.versions import (
     get_major_minor_version,
     get_version_and_alias,
     read_versions,
+    redirect_html,
     sort_versions,
     update_versions,
 )
@@ -185,3 +187,151 @@ def test_cli_validate_branch(repo, monkeypatch):
     result = CliRunner().invoke(cli, ["validate"])
     assert result.exit_code == 0, result.output
     assert "gh-pages:versions.json is valid (1 versions)" in result.output
+
+
+# --- review fixes -------------------------------------------------------------
+
+
+@pytest.mark.parametrize("bad", ["../victim", "/abs/victim", "a/b", ".."])
+def test_deploy_rejects_bad_names_before_touching_disk(repo, tmp_path, bad):
+    victim = tmp_path / "victim"
+    victim.mkdir()
+    (victim / "keep.txt").write_text("keep")
+    _site(repo, "one")
+    with pytest.raises(ValueError):
+        deploy("1.0", [bad], repo=repo)
+    with pytest.raises(ValueError):
+        deploy(bad, repo=repo)
+    assert (victim / "keep.txt").read_text() == "keep"
+
+
+@pytest.mark.parametrize("bad", ["../victim", "/abs/victim", "", "versions.json"])
+def test_alias_rejects_bad_names_before_touching_disk(repo, tmp_path, bad):
+    victim = tmp_path / "victim"
+    victim.mkdir()
+    (victim / "keep.txt").write_text("keep")
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    with pytest.raises(ValueError):
+        alias("1.0", [bad], repo=repo)
+    assert (victim / "keep.txt").read_text() == "keep"
+
+
+def test_redeploy_refreshes_existing_aliases(repo):
+    _site(repo, "old")
+    deploy("1.0", ["stable"], repo=repo, push=True)
+    _site(repo, "new")
+    deploy("1.0", repo=repo, push=True)
+    git("fetch", "-q", "origin", cwd=repo)
+    assert _show(repo, "stable/index.html") == "new"
+    assert json.loads(_show(repo, "versions.json"))[0]["aliases"] == ["stable"]
+
+
+def test_deploy_set_default_must_be_deployed(repo):
+    _site(repo, "one")
+    with pytest.raises(ValueError, match="not a deployed version or alias"):
+        deploy("1.0", set_default="latest", repo=repo)
+    deploy("1.0", ["latest"], set_default="latest", repo=repo, push=True)
+
+
+@pytest.mark.parametrize("target", [".", "nope"])
+def test_set_default_requires_manifest_entry(repo, target):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    with docs_worktree("gh-pages", repo=repo) as wt:
+        (wt / "nope").mkdir()
+        (wt / "nope" / "index.html").write_text("x")
+        git("add", ".", cwd=wt)
+        git("commit", "-qm", "stray dir", cwd=wt)
+        git("push", "-q", "origin", "gh-pages", cwd=wt)
+    with pytest.raises(ValueError, match="not a deployed version or alias"):
+        set_default_version(target, repo=repo)
+
+
+def test_local_unpushed_deploys_are_preserved(repo):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    _site(repo, "two")
+    deploy("1.1", repo=repo)  # not pushed
+    set_default_version("1.1", repo=repo)  # must not discard the 1.1 deploy
+    files = git("ls-tree", "--name-only", "gh-pages", cwd=repo).split()
+    assert "1.1" in files
+    assert "1.1/" in git("show", "gh-pages:index.html", cwd=repo)
+
+
+def test_local_branch_fast_forwards_to_remote(repo, tmp_path):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    other = tmp_path / "other"
+    subprocess.run(
+        ["git", "clone", "-q", git("remote", "get-url", "origin", cwd=repo), str(other)], check=True
+    )
+    git("config", "user.email", "t@example.com", cwd=other)
+    git("config", "user.name", "t", cwd=other)
+    _site(other, "two")
+    deploy("1.1", repo=other, push=True)
+    deploy("1.2", repo=repo, push=True)  # local gh-pages is behind; must fast-forward, not fail
+    git("fetch", "-q", "origin", cwd=repo)
+    names = [v["version"] for v in json.loads(_show(repo, "versions.json"))]
+    assert names == ["1.2", "1.1", "1.0"]
+
+
+def test_diverged_branches_are_rejected(repo, tmp_path):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    _site(repo, "local")
+    deploy("1.2", repo=repo)  # local-only commit
+    other = tmp_path / "other"
+    subprocess.run(
+        ["git", "clone", "-q", git("remote", "get-url", "origin", cwd=repo), str(other)], check=True
+    )
+    git("config", "user.email", "t@example.com", cwd=other)
+    git("config", "user.name", "t", cwd=other)
+    _site(other, "two")
+    deploy("1.1", repo=other, push=True)  # remote moves on -> local and remote diverge
+    local_before = git("rev-parse", "gh-pages", cwd=repo)
+    with pytest.raises(RuntimeError, match="diverged"):
+        deploy("1.3", repo=repo)
+    assert git("rev-parse", "gh-pages", cwd=repo) == local_before
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [("1.0", "1.0/"), ("release#1", "release%231/"), ("a?b", "a%3Fb/"), ('x"y', "x%22y/"), ("a b", "a%20b/")],
+)
+def test_redirect_html_encodes_target(name, expected):
+    page = redirect_html(name)
+    assert f'url={expected}"' in page
+    assert f'href="{expected}"' in page
+    assert f'replace("{expected}"' in page
+    assert '"y' not in page.replace("x%22y", "")
+
+
+class _Result:
+    def __init__(self, returncode, stdout="", stderr=""):
+        self.returncode, self.stdout, self.stderr = returncode, stdout, stderr
+
+
+@pytest.mark.parametrize(
+    "result,expected",
+    [(_Result(0, "v1.2.0\n"), "v1.2.0"), (_Result(1, stderr="release not found"), None)],
+)
+def test_latest_release_tag(monkeypatch, result, expected):
+    monkeypatch.setattr(versions_module.subprocess, "run", lambda *a, **k: result)
+    assert versions_module.get_latest_release_tag("o/r") == expected
+
+
+@pytest.mark.parametrize("stderr", ["HTTP 401: Bad credentials", "API rate limit exceeded", ""])
+def test_latest_release_tag_raises_on_lookup_failure(monkeypatch, stderr):
+    monkeypatch.setattr(versions_module.subprocess, "run", lambda *a, **k: _Result(1, stderr=stderr))
+    with pytest.raises(RuntimeError, match="Failed to look up the latest release of o/r"):
+        versions_module.get_latest_release_tag("o/r")
+
+
+def test_latest_release_tag_without_gh(monkeypatch):
+    def missing(*a, **k):
+        raise FileNotFoundError("gh")
+
+    monkeypatch.setattr(versions_module.subprocess, "run", missing)
+    with pytest.raises(RuntimeError, match="GitHub CLI"):
+        versions_module.get_latest_release_tag()

@@ -83,8 +83,8 @@ on:
   push:
     branches: [main]
 permissions:
-  contents: write
-  pages: write
+  contents: write # push to gh-pages
+  pages: write # request a Pages build after the push
 jobs:
   deploy-docs:
     runs-on: ubuntu-latest
@@ -103,7 +103,7 @@ jobs:
 - **Push to main** deploys `dev/`.
 - The action fails if the commit is not a descendant of the latest release.
 
-Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch).
+Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch). Pushes made with `GITHUB_TOKEN` don't trigger a Pages build on their own, so the action requests one after deploying (this needs `pages: write`).
 
 ### Inputs
 
@@ -140,7 +140,9 @@ quarto-version-selector set-default latest --push
 quarto-version-selector validate
 ```
 
-`versions.json` must match [versions.schema.json](src/quarto_version_selector/versions.schema.json), and every version and alias name must be unique. `deploy`, `alias`, and `set-default` validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed `versions.json` stops the deploy instead of being overwritten.
+`versions.json` must match [versions.schema.json](src/quarto_version_selector/versions.schema.json), and every version and alias name must be unique. `deploy`, `alias`, and `set-default` validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed `versions.json` stops the deploy instead of being overwritten. Names must be single directory names (no `/`, `..`, or reserved root files such as `index.html`), and `set-default` targets must be listed in `versions.json`.
+
+Redeploying a version also refreshes all of its aliases. Deploys without `--push` stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.
 
 Run `quarto-version-selector <command> --help` for all options. Deploys use a temporary git worktree, so your working tree is not touched.
 

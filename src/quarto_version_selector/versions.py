@@ -7,12 +7,14 @@ Version/alias logic and ``versions.json`` handling.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import subprocess
 from functools import cache
 from importlib.resources import files
 from pathlib import Path
+from urllib.parse import quote
 
 import jsonschema
 
@@ -53,14 +55,30 @@ def get_latest_release_tag(repo: str | None = None) -> str | None:
         repo: ``owner/name`` of the repository; defaults to the current repo.
 
     Returns:
-        The tag name, or None if there are no releases.
+        The tag name, or None if the repository has no releases.
+
+    Raises:
+        RuntimeError: If ``gh`` is missing or the lookup fails for any reason
+            other than the repository having no releases (e.g. authentication,
+            rate limits, or network errors).
     """
     cmd = ["gh", "release", "view", "--json", "tagName", "--jq", ".tagName"]
     if repo:
         cmd += ["--repo", repo]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    tag = result.stdout.strip() if result.returncode == 0 else ""
-    return tag or None
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    except FileNotFoundError as err:
+        raise RuntimeError("The GitHub CLI `gh` is required to look up the latest release") from err
+    if result.returncode == 0:
+        tag = result.stdout.strip() or None
+    elif "release not found" in result.stderr.lower():
+        tag = None
+    else:
+        raise RuntimeError(
+            f"Failed to look up the latest release{f' of {repo}' if repo else ''}: "
+            f"{result.stderr.strip() or f'gh exited with status {result.returncode}'}"
+        )
+    return tag
 
 
 def get_tag_hash(tag: str, cwd: str | Path | None = None) -> str:
@@ -164,12 +182,21 @@ def _validator() -> jsonschema.protocols.Validator:
     return validator_cls(schema)
 
 
+RESERVED_NAMES = frozenset({"index.html", "versions.json", "404.html", "cname"})
+
+
+def all_names(versions: list[dict]) -> set[str]:
+    """Return every version and alias name in ``versions``."""
+    return {name for entry in versions for name in [entry["version"], *entry.get("aliases", [])]}
+
+
 def validate_versions(versions: object, source: str = "versions.json") -> None:
     """
     Validate ``versions.json`` data against the schema and cross-entry rules.
 
     Beyond the JSON Schema, every version and alias name must be unique across
-    all entries, since each is a directory on the docs branch.
+    all entries and must not collide (case-insensitively) with files at the
+    root of the docs branch, since each is a directory there.
 
     Args:
         versions: Parsed ``versions.json`` content.
@@ -188,6 +215,7 @@ def validate_versions(versions: object, source: str = "versions.json") -> None:
             for name in [entry["version"], *entry["aliases"]]:
                 seen[name] = seen.get(name, 0) + 1
         errors = [f"name '{name}' is used {n} times" for name, n in sorted(seen.items()) if n > 1]
+        errors += [f"name '{name}' is reserved" for name in sorted(seen) if name.lower() in RESERVED_NAMES]
     if errors:
         raise ValueError(f"Invalid {source}:\n  " + "\n  ".join(errors))
 
@@ -270,11 +298,19 @@ def update_versions(
 
 
 def redirect_html(target: str) -> str:
-    """Return a minimal HTML page that redirects to ``target``."""
+    """
+    Return a minimal HTML page that redirects to the ``target`` directory.
+
+    ``target`` is URL-encoded as a single path segment, then escaped for the
+    HTML attribute and JavaScript string contexts it is used in.
+    """
+    url = quote(target, safe="") + "/"
+    attr = html.escape(url, quote=True)
+    js = json.dumps(url).replace("</", "<\\/")
     return (
         '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n'
-        f'<title>Redirecting</title>\n<meta http-equiv="refresh" content="0; url={target}">\n'
-        f'<link rel="canonical" href="{target}">\n'
-        f'<script>window.location.replace("{target}" + window.location.hash);</script>\n'
-        f'</head>\n<body><a href="{target}">Redirecting to {target}</a></body>\n</html>\n'
+        f'<title>Redirecting</title>\n<meta http-equiv="refresh" content="0; url={attr}">\n'
+        f'<link rel="canonical" href="{attr}">\n'
+        f"<script>window.location.replace({js} + window.location.hash);</script>\n"
+        f'</head>\n<body><a href="{attr}">Redirecting to {html.escape(target)}</a></body>\n</html>\n'
     )

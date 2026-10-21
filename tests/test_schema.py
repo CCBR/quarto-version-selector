@@ -110,3 +110,9 @@ def test_cli_validate_file(tmp_path):
     assert "Additional properties" in fail.output
     missing = runner.invoke(cli, ["validate", str(tmp_path / "nope.json")])
     assert missing.exit_code == 1
+
+
+@pytest.mark.parametrize("name", ["versions.json", "index.html", "CNAME", "404.html"])
+def test_validate_rejects_reserved_names(name):
+    with pytest.raises(ValueError, match="is reserved"):
+        validate_versions([{**ENTRY, "aliases": [name]}])
