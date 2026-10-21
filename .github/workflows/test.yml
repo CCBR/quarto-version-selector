@@ -1,0 +1,25 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
+        with:
+          environments: dev
+          # installs with --locked; cache is keyed on the hash of pixi.lock
+          cache: true
+          # only save the cache from main so PRs don't fill the 10 GB cache limit
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      # npm download cache used by `npm ci` (run by the npm-install pixi task)
+      - uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      - run: pixi run -e dev test
+      - run: pixi run render

@@ -1,0 +1,99 @@
+name: "deploy-version"
+description: "Render a Quarto website and deploy it to a version subfolder of the docs branch (mike-style)."
+author: "CCBR"
+inputs:
+  github-token:
+    description: "GitHub Actions token (e.g. secrets.GITHUB_TOKEN)."
+    required: true
+  version-selector-version:
+    description: "Git ref of CCBR/quarto-version-selector to pip install."
+    required: true
+    default: "main"
+  python-version:
+    description: "The version of Python to install."
+    required: true
+    default: "3.14"
+  docs-branch:
+    description: "The branch to deploy the docs website to."
+    required: true
+    default: "gh-pages"
+  github-actor:
+    description: "Username of GitHub actor for the git commit when the docs branch is deployed."
+    required: true
+    default: "41898282+github-actions[bot]"
+  strict-semver:
+    description: "Whether release tags must follow strict semantic versioning."
+    default: "true"
+  dry-run:
+    description: "Print the deploy command without deploying."
+    default: "false"
+outputs:
+  version:
+    description: "The version of the docs being deployed."
+    value: ${{ steps.set-version.outputs.version }}
+  alias:
+    description: "The alias of the version being deployed."
+    value: ${{ steps.set-version.outputs.alias }}
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: git config
+      shell: bash
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git config --local user.email "${{ inputs.github-actor }}@users.noreply.github.com"
+        git config --local user.name "${{ inputs.github-actor }}"
+    - name: Install quarto-version-selector
+      shell: bash
+      run: pip install --upgrade pip "git+https://github.com/CCBR/quarto-version-selector.git@${{ inputs.version-selector-version }}"
+    - name: Render site
+      shell: bash
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        quarto render
+    - name: Set version & alias
+      id: set-version
+      shell: python {0}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
+        STRICT_SEMVER: ${{ inputs.strict-semver }}
+        REPO: ${{ github.repository }}
+      run: |
+        import os
+
+        from quarto_version_selector.versions import get_version_and_alias
+
+        os.chdir(os.environ["GITHUB_WORKSPACE"])
+        version, alias = get_version_and_alias(
+            release_tag=os.environ.get("RELEASE_TAG") or None,
+            strict_semver=os.environ["STRICT_SEMVER"] == "true",
+            repo=os.environ["REPO"],
+        )
+        print(f"version={version} alias={alias}")
+        with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+            fh.write(f"version={version}\nalias={alias}\n")
+    - name: Deploy docs
+      shell: bash
+      env:
+        DRY_RUN: ${{ inputs.dry-run }}
+        VERSION: ${{ steps.set-version.outputs.version }}
+        ALIAS: ${{ steps.set-version.outputs.alias }}
+        DOCS_BRANCH: ${{ inputs.docs-branch }}
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        cmd=(quarto-version-selector deploy --version "$VERSION" --branch "$DOCS_BRANCH" --push)
+        if [ -n "$ALIAS" ]; then
+          cmd+=(--alias "$ALIAS")
+          [ "$ALIAS" = "latest" ] && cmd+=(--set-default latest)
+        fi
+        if [ "$DRY_RUN" = "true" ]; then
+          echo "Dry run, not deploying the docs: ${cmd[*]}"
+          exit 0
+        fi
+        "${cmd[@]}"

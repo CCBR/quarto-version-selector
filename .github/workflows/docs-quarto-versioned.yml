@@ -1,0 +1,22 @@
+name: docs
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+permissions:
+  contents: write
+  pages: write
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: ./.github/actions/deploy-version
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-selector-version: ${{ github.sha }}
