@@ -73,6 +73,7 @@ Override these custom properties in your own CSS/SCSS:
 
 Use the custom `deploy-version` action:
 
+`.github/workflows/docs-quarto.yml`
 ```yaml
 name: quarto-publish-versioned
 on:
@@ -102,7 +103,7 @@ jobs:
 - **Push to main** deploys `dev/`.
 - The action fails if the commit is not a descendant of the latest release.
 
-`fetch-depth: 0` is required so tags and history are available. Configure GitHub Pages to serve from the `gh-pages` branch.
+Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch).
 
 ### Inputs
 
