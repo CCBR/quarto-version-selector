@@ -243,6 +243,21 @@ git pull
 It's a good idea to run `git pull` before creating a new branch so it will
 start from the most recent commits in main.
 
+## Dev notes
+
+### Updating `pixi.lock` on Dependabot PRs
+
+Dependabot can update version ranges in `pyproject.toml`, but it cannot update
+`pixi.lock`. When that happens, the `test` workflow fails because pixi installs
+with `--locked`. To fix it, regenerate the lockfile on the Dependabot branch with:
+
+```sh
+pixi lock
+```
+
+`pixi lock` only re-solves what changed in `pyproject.toml`; it does not
+upgrade other locked packages.
+
 ## Helpful links for more information
 
 - [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)
