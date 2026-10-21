@@ -97,3 +97,15 @@ runs:
           exit 0
         fi
         "${cmd[@]}"
+    # Pushes made with GITHUB_TOKEN do not trigger a GitHub Pages build, so request one.
+    # Requires `pages: write`; skipped with a warning if Pages is not configured yet.
+    - name: Request GitHub Pages build
+      if: ${{ inputs.dry-run != 'true' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+      run: |
+        if ! gh api --method POST "repos/$REPO/pages/builds" --silent; then
+          echo "::warning::Could not request a GitHub Pages build. Configure Pages to publish from the docs branch and grant the workflow 'pages: write'."
+        fi
