@@ -91,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # tags and history are needed to determine the docs version
       - uses: quarto-dev/quarto-actions/setup@v2
       - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main
         with:
