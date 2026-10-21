@@ -30,7 +30,7 @@ _push = click.option("--push/--no-push", default=False, show_default=True, help=
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(__version__)
 def cli() -> None:
-    """Deploy versioned Quarto websites, mike-style."""
+    """Deploy versioned Quarto websites."""
 
 
 @cli.command("get-version")

@@ -1,5 +1,5 @@
 name: "deploy-version"
-description: "Render a Quarto website and deploy it to a version subfolder of the docs branch (mike-style)."
+description: "Render a Quarto website and deploy it to a version subfolder of the docs branch."
 author: "CCBR"
 inputs:
   github-token:

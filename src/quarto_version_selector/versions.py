@@ -1,7 +1,7 @@
 """
 Version/alias logic and ``versions.json`` handling.
 
-``versions.json`` follows mike's schema: a list of
+``versions.json`` is a list of
 ``{"version": str, "title": str, "aliases": [str, ...]}``.
 """
 

@@ -1,4 +1,4 @@
-"""Deploy versioned Quarto websites to a git branch, mike-style."""
+"""Deploy versioned Quarto websites to a git branch."""
 
 from importlib.resources import files
 

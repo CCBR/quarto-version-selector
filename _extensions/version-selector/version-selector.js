@@ -1,5 +1,5 @@
 /*
- * quarto-version-selector: mike-style version dropdown for Quarto websites.
+ * quarto-version-selector: version dropdown for Quarto websites.
  *
  * Expected gh-pages layout:
  *   /versions.json          [{version, title, aliases}, ...]
