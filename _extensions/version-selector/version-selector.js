@@ -98,12 +98,22 @@
 
         // Minimal toggle when Bootstrap's JS is not available.
         if (!(window.bootstrap && window.bootstrap.Dropdown)) {
+            var setOpen = function (open) {
+                menu.classList.toggle("show", open);
+                button.setAttribute("aria-expanded", open ? "true" : "false");
+            };
             button.addEventListener("click", function (ev) {
                 ev.stopPropagation();
-                menu.classList.toggle("show");
+                setOpen(!menu.classList.contains("show"));
             });
-            document.addEventListener("click", function () {
-                menu.classList.remove("show");
+            document.addEventListener("click", function (ev) {
+                if (!wrap.contains(ev.target)) setOpen(false);
+            });
+            document.addEventListener("keydown", function (ev) {
+                if (ev.key === "Escape" && menu.classList.contains("show")) {
+                    setOpen(false);
+                    button.focus();
+                }
             });
         }
         return wrap;

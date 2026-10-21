@@ -212,13 +212,46 @@ for (const [name, versions] of [
     });
 }
 
-test("fallback toggle shows and hides the menu without Bootstrap", async () => {
+test("fallback toggle shows and hides the menu and syncs aria-expanded", async () => {
     const { doc } = await setup();
     const menu = doc.querySelector(".quarto-version-selector-menu");
-    doc.querySelector(".quarto-version-selector-toggle").click();
+    const button = doc.querySelector(".quarto-version-selector-toggle");
+    assert.equal(button.getAttribute("aria-expanded"), "false");
+    button.click();
     assert.ok(menu.classList.contains("show"));
+    assert.equal(button.getAttribute("aria-expanded"), "true");
+    button.click();
+    assert.ok(!menu.classList.contains("show"));
+    assert.equal(button.getAttribute("aria-expanded"), "false");
+    button.click();
     doc.body.click();
     assert.ok(!menu.classList.contains("show"));
+    assert.equal(button.getAttribute("aria-expanded"), "false");
+});
+
+test("Escape closes the fallback menu", async () => {
+    const { doc, win } = await setup();
+    const menu = doc.querySelector(".quarto-version-selector-menu");
+    const button = doc.querySelector(".quarto-version-selector-toggle");
+    button.click();
+    doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape" }));
+    assert.ok(!menu.classList.contains("show"));
+    assert.equal(button.getAttribute("aria-expanded"), "false");
+    assert.equal(doc.activeElement, button);
+});
+
+test("stylesheet hides the menu until it is opened, without Bootstrap", () => {
+    const css = fs.readFileSync(
+        path.join(__dirname, "../../_extensions/version-selector/version-selector.css"),
+        "utf8",
+    );
+    const dom = new JSDOM(
+        `<style>${css}</style><ul class="dropdown-menu quarto-version-selector-menu"></ul>`,
+    );
+    const menu = dom.window.document.querySelector("ul");
+    assert.equal(dom.window.getComputedStyle(menu).display, "none");
+    menu.classList.add("show");
+    assert.equal(dom.window.getComputedStyle(menu).display, "block");
 });
 
 test("version names are escaped as text, not HTML", async () => {

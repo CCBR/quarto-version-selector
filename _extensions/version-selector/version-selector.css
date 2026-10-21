@@ -35,6 +35,34 @@
   min-width: 10rem;
 }
 
+/*
+ * Open/closed states for formats without Bootstrap's CSS. :where() has zero
+ * specificity, so Bootstrap's own .dropdown-menu rules win when present.
+ */
+:where(.quarto-version-selector-menu) {
+  display: none;
+  position: absolute;
+  right: 0;
+  z-index: 1000;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  border: 1px solid var(--version-selector-border);
+  border-radius: 0.25rem;
+}
+
+:where(.quarto-version-selector-menu.show) {
+  display: block;
+}
+
+:where(.quarto-version-selector-menu .dropdown-item) {
+  display: block;
+  padding: 0.25rem 1rem;
+  white-space: nowrap;
+  text-decoration: none;
+  color: inherit;
+}
+
 .quarto-version-selector-alias {
   display: inline-block;
   margin-left: 0.5em;
