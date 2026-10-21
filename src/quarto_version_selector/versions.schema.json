@@ -1,0 +1,52 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/CCBR/quarto-version-selector/blob/main/src/quarto_version_selector/versions.schema.json",
+    "title": "quarto-version-selector versions.json",
+    "description": "Versions deployed to the docs branch. Each version and alias is a top-level directory of the docs branch. Uniqueness of names across entries is not expressible in JSON Schema and is enforced by the CLI.",
+    "type": "array",
+    "items": {
+        "$ref": "#/$defs/entry"
+    },
+    "$defs": {
+        "name": {
+            "description": "A single directory name: non-empty, no slashes or backslashes, and not '.' or '..'.",
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\]+$",
+            "not": {
+                "enum": [
+                    ".",
+                    ".."
+                ]
+            }
+        },
+        "entry": {
+            "type": "object",
+            "required": [
+                "version",
+                "title",
+                "aliases"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "$ref": "#/$defs/name",
+                    "description": "Version directory, e.g. '1.2' or 'dev'."
+                },
+                "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Label shown in the dropdown."
+                },
+                "aliases": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "$ref": "#/$defs/name"
+                    },
+                    "description": "Alias directories that are copies of this version, e.g. 'latest'."
+                }
+            }
+        }
+    }
+}

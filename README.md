@@ -135,7 +135,11 @@ quarto-version-selector deploy --version 1.2 --alias latest --set-default latest
 quarto-version-selector alias 1.2 stable --push
 # change where the site root redirects
 quarto-version-selector set-default latest --push
+# check versions.json on the docs branch (or pass a file path)
+quarto-version-selector validate
 ```
+
+`versions.json` must match [versions.schema.json](src/quarto_version_selector/versions.schema.json), and every version and alias name must be unique. `deploy`, `alias`, and `set-default` validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed `versions.json` stops the deploy instead of being overwritten.
 
 Run `quarto-version-selector <command> --help` for all options. Deploys use a temporary git worktree, so your working tree is not touched.
 

@@ -183,6 +183,7 @@ def set_default_version(
         ValueError: If ``target`` is not deployed.
     """
     with docs_worktree(branch, remote=remote, repo=repo) as wt:
+        read_versions(wt / VERSIONS_FILE)  # validate before changing the branch
         if not (wt / target).is_dir():
             raise ValueError(f"'{target}' is not deployed on {branch}")
         _write_default(wt, target)

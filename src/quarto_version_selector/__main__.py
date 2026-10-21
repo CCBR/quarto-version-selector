@@ -13,14 +13,15 @@ Example usage::
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import click
 
 from . import __version__
+from .deploy import VERSIONS_FILE, docs_worktree, set_default_version
 from .deploy import alias as alias_version
 from .deploy import deploy as deploy_version
-from .deploy import set_default_version
-from .versions import get_version_and_alias
+from .versions import get_version_and_alias, read_versions
 
 _branch = click.option("--branch", default="gh-pages", show_default=True, help="Docs branch.")
 _remote = click.option("--remote", default="origin", show_default=True, help="Git remote.")
@@ -129,6 +130,33 @@ def set_default(target: str, branch: str, remote: str, push: bool) -> None:
     """Redirect the site root to TARGET (a version or alias)."""
     set_default_version(target, branch=branch, remote=remote, push=push)
     click.echo(f"Default version set to {target}")
+
+
+@cli.command()
+@click.argument("path", required=False, type=click.Path(dir_okay=False))
+@_branch
+@_remote
+def validate(path: str | None, branch: str, remote: str) -> None:
+    """
+    Validate versions.json against the schema.
+
+    Validates PATH if given, otherwise versions.json on the docs branch.
+    """
+    try:
+        if path:
+            if not Path(path).is_file():
+                raise click.ClickException(f"{path} does not exist")
+            versions = read_versions(path)
+            source = path
+        else:
+            with docs_worktree(branch, remote=remote) as wt:
+                if not (wt / VERSIONS_FILE).is_file():
+                    raise click.ClickException(f"{VERSIONS_FILE} not found on {branch}")
+                versions = read_versions(wt / VERSIONS_FILE)
+            source = f"{branch}:{VERSIONS_FILE}"
+    except ValueError as err:
+        raise click.ClickException(str(err)) from err
+    click.echo(f"{source} is valid ({len(versions)} versions)")
 
 
 def main() -> None:

@@ -8,7 +8,7 @@ import pytest
 from click.testing import CliRunner
 
 from quarto_version_selector.__main__ import cli
-from quarto_version_selector.deploy import alias, deploy, set_default_version
+from quarto_version_selector.deploy import alias, deploy, docs_worktree, set_default_version
 from quarto_version_selector.versions import (
     get_major_minor_version,
     get_version_and_alias,
@@ -160,3 +160,28 @@ def test_cli_dry_run(repo, monkeypatch):
     assert result.exit_code == 0
     assert "Dry run" in result.output
     assert read_versions(repo / "versions.json") == []
+
+
+def test_commands_refuse_corrupt_versions_json(repo):
+    """deploy, alias, and set-default all validate the existing versions.json first."""
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    with docs_worktree("gh-pages", repo=repo) as wt:
+        (wt / "versions.json").write_text('[{"version": "1.0"}]')
+        git("commit", "-qam", "corrupt", cwd=wt)
+        git("push", "-q", "origin", "gh-pages", cwd=wt)
+    with pytest.raises(ValueError, match="Invalid"):
+        deploy("1.1", repo=repo)
+    with pytest.raises(ValueError, match="Invalid"):
+        alias("1.0", ["stable"], repo=repo)
+    with pytest.raises(ValueError, match="Invalid"):
+        set_default_version("1.0", repo=repo)
+
+
+def test_cli_validate_branch(repo, monkeypatch):
+    _site(repo, "one")
+    deploy("1.0", ["latest"], repo=repo, push=True)
+    monkeypatch.chdir(repo)
+    result = CliRunner().invoke(cli, ["validate"])
+    assert result.exit_code == 0, result.output
+    assert "gh-pages:versions.json is valid (1 versions)" in result.output

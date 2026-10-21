@@ -10,7 +10,11 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from functools import cache
+from importlib.resources import files
 from pathlib import Path
+
+import jsonschema
 
 DEV_VERSION = "dev"
 LATEST_ALIAS = "latest"
@@ -151,20 +155,73 @@ def sort_versions(versions: list[dict]) -> list[dict]:
     return sorted(versions, key=_sort_key)
 
 
+@cache
+def _validator() -> jsonschema.protocols.Validator:
+    """Return a cached validator for ``versions.schema.json``."""
+    schema = json.loads(files(__package__).joinpath("versions.schema.json").read_text())
+    validator_cls = jsonschema.validators.validator_for(schema)
+    validator_cls.check_schema(schema)
+    return validator_cls(schema)
+
+
+def validate_versions(versions: object, source: str = "versions.json") -> None:
+    """
+    Validate ``versions.json`` data against the schema and cross-entry rules.
+
+    Beyond the JSON Schema, every version and alias name must be unique across
+    all entries, since each is a directory on the docs branch.
+
+    Args:
+        versions: Parsed ``versions.json`` content.
+        source: Label used in error messages, e.g. a file path.
+
+    Raises:
+        ValueError: If the data is invalid. All problems are listed.
+    """
+    errors = [
+        f"{'/'.join(map(str, e.absolute_path)) or '<root>'}: {e.message}"
+        for e in sorted(_validator().iter_errors(versions), key=lambda e: list(map(str, e.absolute_path)))
+    ]
+    if not errors:
+        seen: dict[str, int] = {}
+        for entry in versions:
+            for name in [entry["version"], *entry["aliases"]]:
+                seen[name] = seen.get(name, 0) + 1
+        errors = [f"name '{name}' is used {n} times" for name, n in sorted(seen.items()) if n > 1]
+    if errors:
+        raise ValueError(f"Invalid {source}:\n  " + "\n  ".join(errors))
+
+
 def read_versions(path: str | Path) -> list[dict]:
-    """Read ``versions.json``; return an empty list if it does not exist."""
+    """
+    Read and validate ``versions.json``.
+
+    Returns an empty list if the file does not exist.
+
+    Raises:
+        ValueError: If the file is not valid JSON or fails validation.
+    """
     path = Path(path)
-    if not path.exists():
-        return []
-    data = json.loads(path.read_text())
-    if not isinstance(data, list):
-        raise TypeError(f"{path} must contain a JSON list")
+    data = []
+    if path.exists():
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError as err:
+            raise ValueError(f"Invalid {path}: not valid JSON ({err})") from err
+        validate_versions(data, source=str(path))
     return data
 
 
 def write_versions(path: str | Path, versions: list[dict]) -> None:
-    """Write sorted ``versions.json``."""
-    Path(path).write_text(json.dumps(sort_versions(versions), indent=2) + "\n")
+    """
+    Validate and write sorted ``versions.json``.
+
+    Raises:
+        ValueError: If ``versions`` fails validation; nothing is written.
+    """
+    versions = sort_versions(versions)
+    validate_versions(versions, source=str(path))
+    Path(path).write_text(json.dumps(versions, indent=2) + "\n")
 
 
 def update_versions(

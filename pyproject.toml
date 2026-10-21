@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE.md" }
 authors = [{ name = "Kelly Sovacool", email = "kelly.sovacool@nih.gov" }]
-dependencies = ["click>=8"]
+dependencies = ["click>=8", "jsonschema>=4.18"]
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
@@ -22,7 +22,7 @@ quarto-version-selector = "quarto_version_selector.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-quarto_version_selector = ["VERSION"]
+quarto_version_selector = ["VERSION", "versions.schema.json"]
 
 [tool.setuptools.dynamic]
 version = { file = "src/quarto_version_selector/VERSION" }
