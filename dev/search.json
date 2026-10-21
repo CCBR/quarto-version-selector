@@ -1,0 +1,23 @@
+[
+  {
+    "objectID": "template.html",
+    "href": "template.html",
+    "title": "Version Selector Example",
+    "section": "",
+    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
+  },
+  {
+    "objectID": "template.html#usage",
+    "href": "template.html#usage",
+    "title": "Version Selector Example",
+    "section": "",
+    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "quarto-version-selector",
+    "section": "",
+    "text": "A for Quarto websites. The selector appears in the navbar once the site is deployed with quarto-version-selector deploy, which writes a versions.json file to the root of the docs branch.\nSee the README for usage."
+  }
+]
