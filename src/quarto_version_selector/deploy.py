@@ -20,6 +20,11 @@ from .versions import (
 )
 
 VERSIONS_FILE = "versions.json"
+PUSH_RETRIES = 3
+
+
+class PushRejectedError(RuntimeError):
+    """The docs branch push was rejected because the remote moved on."""
 
 
 def _git(*args: str, cwd: str | Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -108,17 +113,22 @@ def docs_worktree(branch: str, remote: str = "origin", repo: str | Path = ".") -
 
 def _child_dir(worktree: Path, name: str) -> Path:
     """
-    Return ``worktree / name``, ensuring it is a direct child of the worktree.
+    Return ``worktree / name`` (unresolved), ensuring it is a direct child of the worktree.
 
     Names are validated by the schema before this is called; this is a second
-    guard so a bad name can never delete or write outside the worktree.
+    guard so a bad name can never delete or write outside the worktree. The
+    path is returned unresolved so an existing symlink (e.g. an alias that
+    links to a version) is replaced itself rather than its target.
 
     Raises:
-        ValueError: If ``name`` does not resolve to a direct child of ``worktree``.
+        ValueError: If ``name`` is not a single path component or a
+            non-symlink entry resolves outside ``worktree``.
     """
     root = worktree.resolve()
-    path = (root / name).resolve()
-    if path.parent != root:
+    if not name or name in (".", "..") or Path(name).name != name or "\\" in name:
+        raise ValueError(f"Refusing to write outside the docs worktree: {name!r}")
+    path = root / name
+    if not path.is_symlink() and path.resolve().parent != root:
         raise ValueError(f"Refusing to write outside the docs worktree: {name!r}")
     return path
 
@@ -151,14 +161,57 @@ def _require_deployed(target: str, versions: list[dict], worktree: Path | None, 
 
 
 def _commit_and_push(worktree: Path, branch: str, message: str, remote: str, push: bool) -> bool:
-    """Commit all changes in the worktree; optionally push. Return True if committed."""
+    """
+    Commit all changes in the worktree; optionally push. Return True if committed.
+
+    Raises:
+        PushRejectedError: If the push is rejected because the remote branch moved.
+        subprocess.CalledProcessError: If the push fails for another reason.
+    """
     _git("add", "--all", cwd=worktree)
     committed = _git("diff", "--cached", "--quiet", cwd=worktree, check=False).returncode != 0
     if committed:
         _git("commit", "-m", message, cwd=worktree)
     if push:
-        _git("push", remote, f"{branch}:{branch}", cwd=worktree)
+        result = _git("push", remote, f"{branch}:{branch}", cwd=worktree, check=False)
+        if result.returncode != 0:
+            stderr = result.stderr.lower()
+            if any(s in stderr for s in ("rejected", "fetch first", "non-fast-forward")):
+                raise PushRejectedError(f"Push to {remote}/{branch} was rejected: {result.stderr.strip()}")
+            raise subprocess.CalledProcessError(
+                result.returncode, result.args, output=result.stdout, stderr=result.stderr
+            )
     return committed
+
+
+def _with_push_retry(operation, branch: str, remote: str, repo: str | Path, push: bool) -> bool:
+    """
+    Run ``operation`` and, if its push is rejected, rewind the local docs branch and retry.
+
+    Concurrent deploys (e.g. a push to main and a release) can start from the
+    same docs-branch tip; the second push is then rejected. Rewinding the local
+    branch to where it was before the attempt and re-running the operation
+    rebuilds the change on top of the new remote tip.
+
+    Raises:
+        PushRejectedError: If the push is still rejected after ``PUSH_RETRIES`` retries.
+    """
+    repo = Path(repo).resolve()
+    local_ref = f"refs/heads/{branch}"
+    result = None
+    for attempt in range(PUSH_RETRIES + 1):
+        before = _git("rev-parse", "--verify", "--quiet", local_ref, cwd=repo, check=False).stdout.strip()
+        try:
+            result = operation()
+            break
+        except PushRejectedError:
+            if not push or attempt == PUSH_RETRIES:
+                raise
+            if before:
+                _git("update-ref", local_ref, before, cwd=repo)
+            else:
+                _git("update-ref", "-d", local_ref, cwd=repo)
+    return result
 
 
 def deploy(
@@ -204,6 +257,25 @@ def deploy(
     if not site.is_dir():
         raise FileNotFoundError(f"Site directory not found: {site}. Did you run `quarto render`?")
 
+    def operation() -> bool:
+        return _deploy_once(version, aliases, site, branch, title, set_default, remote, push, repo, message)
+
+    return _with_push_retry(operation, branch, remote, repo, push)
+
+
+def _deploy_once(
+    version: str,
+    aliases: list[str],
+    site: Path,
+    branch: str,
+    title: str | None,
+    set_default: str | None,
+    remote: str,
+    push: bool,
+    repo: str | Path,
+    message: str | None,
+) -> bool:
+    """Run one deploy attempt (see ``deploy``)."""
     with docs_worktree(branch, remote=remote, repo=repo) as wt:
         versions = update_versions(read_versions(wt / VERSIONS_FILE), version, aliases, title)
         # validate every name before touching the filesystem
@@ -245,6 +317,17 @@ def alias(
     aliases = [a for a in aliases if a]
     if not aliases:
         raise ValueError("At least one alias is required")
+
+    def operation() -> bool:
+        return _alias_once(version, aliases, branch, remote, push, repo)
+
+    return _with_push_retry(operation, branch, remote, repo, push)
+
+
+def _alias_once(
+    version: str, aliases: list[str], branch: str, remote: str, push: bool, repo: str | Path
+) -> bool:
+    """Run one alias attempt (see ``alias``)."""
     with docs_worktree(branch, remote=remote, repo=repo) as wt:
         existing = read_versions(wt / VERSIONS_FILE)
         if version not in {v["version"] for v in existing} or not (wt / version).is_dir():
@@ -275,6 +358,15 @@ def set_default_version(
         ValueError: If ``target`` is not a version or alias listed in
             ``versions.json`` with a directory on the branch.
     """
+
+    def operation() -> bool:
+        return _set_default_once(target, branch, remote, push, repo)
+
+    return _with_push_retry(operation, branch, remote, repo, push)
+
+
+def _set_default_once(target: str, branch: str, remote: str, push: bool, repo: str | Path) -> bool:
+    """Run one set-default attempt (see ``set_default_version``)."""
     with docs_worktree(branch, remote=remote, repo=repo) as wt:
         _require_deployed(target, read_versions(wt / VERSIONS_FILE), wt, branch)
         _write_default(wt, target)

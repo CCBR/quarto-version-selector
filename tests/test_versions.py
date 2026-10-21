@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from quarto_version_selector import deploy as deploy_module
 from quarto_version_selector import versions as versions_module
 from quarto_version_selector.__main__ import cli
 from quarto_version_selector.deploy import alias, deploy, docs_worktree, set_default_version
@@ -335,3 +336,94 @@ def test_latest_release_tag_without_gh(monkeypatch):
     monkeypatch.setattr(versions_module.subprocess, "run", missing)
     with pytest.raises(RuntimeError, match="GitHub CLI"):
         versions_module.get_latest_release_tag()
+
+
+# --- second review round ------------------------------------------------------
+
+
+def test_older_tag_on_latest_commit_does_not_get_latest(repo):
+    git("tag", "v1.0.0", cwd=repo)
+    git("tag", "v2.0.0", cwd=repo)  # same commit as v1.0.0
+    assert get_version_and_alias("v1.0.0", "v2.0.0", cwd=repo) == ("1.0", "")
+    assert get_version_and_alias("v2.0.0", "v2.0.0", cwd=repo) == ("2.0", "latest")
+    assert get_version_and_alias(None, "v2.0.0", cwd=repo) == ("2.0", "latest")
+
+
+def test_git_and_nojekyll_are_reserved(repo):
+    _site(repo, "one")
+    for bad in [".git", ".nojekyll", ".GIT"]:
+        with pytest.raises(ValueError, match="reserved"):
+            deploy(bad, repo=repo)
+        with pytest.raises(ValueError, match="reserved"):
+            deploy("1.0", [bad], repo=repo)
+    deploy("1.0", repo=repo, push=True)
+    with pytest.raises(ValueError, match="reserved"):
+        alias("1.0", [".git"], repo=repo)
+
+
+def test_moving_symlinked_alias_keeps_old_version(repo):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    # an alias stored as a symlink to its version (e.g. created by another tool)
+    with docs_worktree("gh-pages", repo=repo) as wt:
+        (wt / "latest").symlink_to("1.0", target_is_directory=True)
+        data = json.loads((wt / "versions.json").read_text())
+        data[0]["aliases"] = ["latest"]
+        (wt / "versions.json").write_text(json.dumps(data))
+        git("add", ".", cwd=wt)
+        git("commit", "-qm", "symlink alias", cwd=wt)
+        git("push", "-q", "origin", "gh-pages", cwd=wt)
+    _site(repo, "two")
+    deploy("1.1", ["latest"], repo=repo, push=True)
+    git("fetch", "-q", "origin", cwd=repo)
+    assert _show(repo, "1.0/index.html") == "one"
+    assert _show(repo, "latest/index.html") == "two"
+
+
+def _clone(repo: Path, dest: Path) -> Path:
+    subprocess.run(
+        ["git", "clone", "-q", git("remote", "get-url", "origin", cwd=repo), str(dest)], check=True
+    )
+    git("config", "user.email", "t@example.com", cwd=dest)
+    git("config", "user.name", "t", cwd=dest)
+    return dest
+
+
+def test_rejected_push_is_retried_on_new_remote_tip(repo, tmp_path, monkeypatch):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    other = _clone(repo, tmp_path / "other")
+    _site(other, "concurrent")
+    real = deploy_module._commit_and_push
+    calls = {"n": 0}
+
+    def racing_commit_and_push(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:  # another run publishes between our fetch and our push
+            monkeypatch.setattr(deploy_module, "_commit_and_push", real)
+            deploy("2.0", repo=other, push=True)
+            monkeypatch.setattr(deploy_module, "_commit_and_push", racing_commit_and_push)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(deploy_module, "_commit_and_push", racing_commit_and_push)
+    _site(repo, "mine")
+    deploy("1.1", repo=repo, push=True)
+    assert calls["n"] == 2
+    git("fetch", "-q", "origin", cwd=repo)
+    assert [v["version"] for v in json.loads(_show(repo, "versions.json"))] == ["2.0", "1.1", "1.0"]
+    assert _show(repo, "2.0/index.html") == "concurrent"
+    assert _show(repo, "1.1/index.html") == "mine"
+
+
+def test_push_rejection_gives_up_after_retries(repo, monkeypatch):
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+
+    def always_rejected(*args, **kwargs):
+        raise deploy_module.PushRejectedError("rejected")
+
+    monkeypatch.setattr(deploy_module, "_commit_and_push", always_rejected)
+    before = git("rev-parse", "gh-pages", cwd=repo)
+    with pytest.raises(deploy_module.PushRejectedError):
+        deploy("1.1", repo=repo, push=True)
+    assert git("rev-parse", "gh-pages", cwd=repo) == before

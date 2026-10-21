@@ -109,7 +109,7 @@ def get_version_and_alias(
 
     Rules (mirroring ``ccbr_actions.docs.get_docs_version``):
 
-    - HEAD is the latest release -> ``(major.minor, "latest")``.
+    - Building the latest release tag at its commit -> ``(major.minor, "latest")``.
     - ``release_tag`` is an older release -> ``(major.minor, "")``.
     - Otherwise HEAD descends from the latest release (or there are no
       releases) -> ``("dev", "")``.
@@ -136,7 +136,9 @@ def get_version_and_alias(
     current_hash = _git("rev-parse", "HEAD", cwd=cwd)
     latest_hash = get_tag_hash(latest_release_tag, cwd=cwd) if latest_release_tag else ""
 
-    if latest_hash and latest_hash == current_hash:
+    # `latest` requires both the latest tag and its commit: an older tag on the
+    # same commit as the latest release must not take the alias.
+    if latest_hash and latest_hash == current_hash and release_tag == latest_release_tag:
         version, alias = _release_version(release_tag, strict_semver), LATEST_ALIAS
     elif release_tag and release_tag != latest_release_tag:
         version, alias = _release_version(release_tag, strict_semver), ""
@@ -182,7 +184,8 @@ def _validator() -> jsonschema.protocols.Validator:
     return validator_cls(schema)
 
 
-RESERVED_NAMES = frozenset({"index.html", "versions.json", "404.html", "cname"})
+# root entries of the docs branch that must never be replaced by a version or alias
+RESERVED_NAMES = frozenset({".git", ".nojekyll", "index.html", "versions.json", "404.html", "cname"})
 
 
 def all_names(versions: list[dict]) -> set[str]:
