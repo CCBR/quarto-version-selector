@@ -1,0 +1,60 @@
+name: auto-format
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auto-format:
+    # Dependabot runs cannot read repo secrets, so the bot token step would fail
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.CCBR_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.CCBR_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: git config
+        run: |
+          git config --global user.name "CCBR-bot"
+          git config --global user.email "258092125+ccbr-bot@users.noreply.github.com"
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+
+      - id: changed-files
+        name: Check changed files
+        uses: knu/changed-files@v1
+        with:
+          paths: |
+            CITATION.cff
+
+      - uses: citation-file-format/cffconvert-github-action@2.0.0
+        if: ${{ hashFiles('CITATION.cff') != '' && steps.changed-files.outputs.matched_files != '' }}
+        with:
+          args: "--format codemeta --outfile codemeta.json"
+
+      - name: format
+        uses: pre-commit/action@v3.0.1
+        continue-on-error: true
+
+      - name: commit & push
+        run: |
+          git add .
+          git commit -m "ci: 🤖 auto-format" || echo "nothing to commit"
+          git push || echo "nothing to push"
