@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # workflows in .github/workflows/ plus composite actions in .github/actions/*/
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+  # pyproject.toml: [project] dependencies and optional dev dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # only change version ranges when the new release falls outside them
+    versioning-strategy: "increase-if-necessary"
+    groups:
+      runtime:
+        dependency-type: "production"
+      dev:
+        dependency-type: "development"
+    cooldown:
+      default-days: 7
+  # package.json / package-lock.json: JS test dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      npm:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+  # .pre-commit-config.yaml hook revisions
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
