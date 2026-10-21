@@ -25,7 +25,7 @@ where = ["src"]
 quarto_version_selector = ["VERSION", "versions.schema.json"]
 
 [tool.setuptools.dynamic]
-version = { file = "src/quarto_version_selector/VERSION" }
+version = { file = "_extensions/version-selector/VERSION" }
 
 [tool.ruff]
 line-length = 110

@@ -9,7 +9,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 EXT_DIR = ROOT / "_extensions" / "version-selector"
-VERSION = (ROOT / "src" / "quarto_version_selector" / "VERSION").read_text().strip()
+VERSION = (EXT_DIR / "VERSION").read_text().strip()
 
 requires_quarto = pytest.mark.skipif(shutil.which("quarto") is None, reason="quarto not installed")
 
@@ -37,12 +37,15 @@ def test_extension_metadata():
         assert (EXT_DIR / name).is_file()
 
 
-def test_extension_version_matches_version_file():
-    """The extension can't read src/ when installed, so its versions must be kept in sync."""
+def test_version_is_single_sourced():
+    """The extension's VERSION file is the only place the version is written."""
     ext_yml = (EXT_DIR / "_extension.yml").read_text()
     lua = (EXT_DIR / "version-selector.lua").read_text()
-    assert re.search(r"^version:\s*(\S+)", ext_yml, re.MULTILINE).group(1) == VERSION
-    assert re.search(r'version = "([^"]+)"', lua).group(1) == VERSION
+    assert not re.search(r"^version:", ext_yml, re.MULTILINE)
+    assert "version = read_version()" in lua
+    assert not re.search(r'version = "[^"]+"', lua)
+    for link in [ROOT / "VERSION", ROOT / "src" / "quarto_version_selector" / "VERSION"]:
+        assert link.resolve() == (EXT_DIR / "VERSION").resolve()
 
 
 def test_package_version_matches_version_file():
@@ -78,6 +81,19 @@ def test_website_defaults(tmp_path):
     assert (libdir / "version-selector.css").is_file()
     # script loads after the body content, once the navbar exists
     assert html.index("version-selector.js") > html.index('id="quarto-header"')
+
+
+@requires_quarto
+def test_dev_version_is_used_for_the_dependency(tmp_path):
+    shutil.copytree(EXT_DIR, tmp_path / "_extensions" / "version-selector")
+    (tmp_path / "_extensions" / "version-selector" / "VERSION").write_text("0.2.0-dev\n")
+    (tmp_path / "_quarto.yml").write_text(
+        "project:\n  type: website\nwebsite:\n  title: t\nfilters:\n  - version-selector\n"
+    )
+    (tmp_path / "index.qmd").write_text("---\ntitle: Test\n---\n\nhi\n")
+    subprocess.run(["quarto", "render"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    html = (tmp_path / "_site" / "index.html").read_text()
+    assert "quarto-contrib/version-selector-0.2.0-dev/version-selector.js" in html
 
 
 @requires_quarto

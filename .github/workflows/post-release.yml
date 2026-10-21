@@ -26,5 +26,5 @@ jobs:
       - uses: CCBR/actions/post-release@v0.8.0
         with:
           github-token: ${{ github.token }}
-          version-filepath: src/quarto_version_selector/VERSION
+          version-filepath: _extensions/version-selector/VERSION
           update-sliding-tags: false
