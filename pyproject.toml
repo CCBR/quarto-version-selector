@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quarto-version-selector"
+dynamic = ["version"]
+description = "Deploy versioned Quarto websites with a mike-style version selector"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE.md" }
+authors = [{ name = "Kelly Sovacool", email = "kelly.sovacool@nih.gov" }]
+dependencies = ["click>=8"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+quarto-version-selector = "quarto_version_selector.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+quarto_version_selector = ["VERSION"]
+
+[tool.setuptools.dynamic]
+version = { file = "src/quarto_version_selector/VERSION" }
+
+[tool.ruff]
+line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
