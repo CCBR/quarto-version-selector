@@ -32,3 +32,35 @@ line-length = 110
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[tool.pixi.dependencies]
+python = ">=3.10"
+quarto = ">=1.9,<2"
+
+[tool.pixi.pypi-dependencies]
+quarto-version-selector = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+
+[tool.pixi.feature.dev.dependencies]
+nodejs = ">=24"
+pre-commit = "*"
+
+[tool.pixi.tasks]
+render = "quarto render"
+preview = "quarto preview"
+
+[tool.pixi.feature.dev.tasks]
+lint = "ruff check ."
+format = "ruff format ."
+test-py = "pytest"
+npm-install = { cmd = "npm ci", inputs = ["package.json", "package-lock.json"], outputs = ["node_modules/.package-lock.json"] }
+test-js = { cmd = "npm test", depends-on = ["npm-install"] }
+test = { depends-on = ["lint", "test-py", "test-js"] }
+pre-commit = "pre-commit run --all-files"
