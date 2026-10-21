@@ -44,8 +44,10 @@ def test_version_is_single_sourced():
     assert not re.search(r"^version:", ext_yml, re.MULTILINE)
     assert "version = read_version()" in lua
     assert not re.search(r'version = "[^"]+"', lua)
-    assert (ROOT / "VERSION").resolve() == (EXT_DIR / "VERSION").resolve()
-    assert not (ROOT / "src" / "quarto_version_selector" / "VERSION").exists()
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=ROOT, check=True, capture_output=True, text=True
+    ).stdout.splitlines()
+    assert [f for f in tracked if Path(f).name == "VERSION"] == ["_extensions/version-selector/VERSION"]
 
 
 def test_package_version_matches_version_file():
