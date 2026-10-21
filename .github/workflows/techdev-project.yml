@@ -4,7 +4,9 @@ on:
   issues:
     types:
       - opened
-  pull_request:
+  # pull_request_target runs in the base repository context so fork PRs can use the
+  # app secrets. This is safe only because this workflow never checks out PR code.
+  pull_request_target:
     types:
       - opened
 

@@ -14,8 +14,12 @@ concurrency:
 
 jobs:
   auto-format:
-    # Dependabot runs cannot read repo secrets, so the bot token step would fail
-    if: github.actor != 'dependabot[bot]'
+    # Dependabot and fork PR runs cannot read repo secrets, so the bot token step would
+    # fail; fork branches also can't be pushed to from here. Skip both.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +40,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          # push with the app token so the formatting commit triggers the test workflow
+          token: ${{ steps.generate-token.outputs.token }}
 
       - id: changed-files
         name: Check changed files
