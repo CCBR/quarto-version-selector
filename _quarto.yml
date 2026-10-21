@@ -1,0 +1,26 @@
+project:
+  type: website
+  render:
+    - index.qmd
+    - template.qmd
+
+website:
+  title: "quarto-version-selector"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: template.qmd
+        text: Example
+    tools:
+      - icon: github
+        href: https://github.com/CCBR/quarto-version-selector
+
+filters:
+  - version-selector
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly

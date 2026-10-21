@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quarto-version-selector"
+dynamic = ["version"]
+description = "Deploy versioned Quarto websites with a version selector"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE.md" }
+authors = [{ name = "Kelly Sovacool", email = "kelly.sovacool@nih.gov" }]
+dependencies = ["click>=8", "jsonschema>=4.18"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+quarto-version-selector = "quarto_version_selector.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+quarto_version_selector = ["versions.schema.json"]
+
+[tool.setuptools.dynamic]
+version = { file = "_extensions/version-selector/VERSION" }
+
+[tool.ruff]
+line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[tool.pixi.dependencies]
+python = ">=3.10"
+quarto = ">=1.9,<2"
+
+[tool.pixi.pypi-dependencies]
+quarto-version-selector = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+
+[tool.pixi.feature.dev.dependencies]
+nodejs = ">=24"
+pre-commit = "*"
+
+[tool.pixi.tasks]
+render = "quarto render"
+preview = "quarto preview"
+
+[tool.pixi.feature.dev.tasks]
+lint = "ruff check ."
+format = "ruff format ."
+test-py = "pytest"
+npm-install = { cmd = "npm ci", inputs = ["package.json", "package-lock.json"], outputs = ["node_modules/.package-lock.json"] }
+test-js = { cmd = "npm test", depends-on = ["npm-install"] }
+test = { depends-on = ["lint", "test-py", "test-js"] }
+pre-commit = "pre-commit run --all-files"

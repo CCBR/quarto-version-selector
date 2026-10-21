@@ -1,0 +1,27 @@
+name: docs
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+# Deploys share one docs branch: run them one at a time. A queued run can be
+# replaced by a newer one, so the CLI also retries rejected pushes on the new tip.
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+permissions:
+  contents: write
+  pages: write
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: ./.github/actions/deploy-version
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-selector-version: ${{ github.sha }}

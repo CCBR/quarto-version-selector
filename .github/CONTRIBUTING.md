@@ -1,0 +1,268 @@
+# Contributing to quarto-version-selector
+
+## Proposing changes with issues
+
+If you want to make a change, it's a good idea to first
+[open an issue](https://github.com/CCBR/quarto-version-selector/issues)
+and make sure someone from the team agrees that it’s needed.
+
+If you've decided to work on an issue,
+[assign yourself to the issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/assigning-issues-and-pull-requests-to-other-github-users#assigning-an-individual-issue-or-pull-request)
+so others will know you're working on it.
+
+## Pull request process
+
+We use [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)
+as our collaboration process.
+Follow the steps below for detailed instructions on contributing changes to
+quarto-version-selector.
+
+![GitHub Flow diagram](https://raw.githubusercontent.com/CCBR/CCBR_NextflowTemplate/48eb57ececfac68136f1daec129c4e32025f387a/.github/img/GitHub-Flow_bg-white.png)
+
+### Clone the repo
+
+If you are a member of [CCBR](https://github.com/CCBR),
+you can clone this repository to your computer or development environment.
+Otherwise, you will first need to
+[fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)
+the repo and clone your fork. You only need to do this step once.
+
+```sh
+git clone git@github.com:CCBR/quarto-version-selector.git
+cd quarto-version-selector
+```
+
+### If this is your first time cloning the repo, you may need to install dependencies
+
+- Install [Pixi](https://pixi.sh/latest/installation/).
+  It provides Python, Quarto, Node.js, and pre-commit, and installs the
+  Python package in editable mode with its dev dependencies:
+
+  ```sh
+  pixi install -e dev
+  ```
+
+  Alternatively, without Pixi, install [Quarto](https://quarto.org/docs/get-started/)
+  and [Node.js](https://nodejs.org/), then run:
+
+  ```sh
+  pip install -e ".[dev]"
+  npm install
+  ```
+
+- Install the repo's [pre-commit](https://pre-commit.com/) hooks.
+  You'll only need to do this step the first time you clone the repo.
+
+  ```sh
+  pixi run -e dev pre-commit install
+  ```
+
+### Create a branch
+
+Create a Git branch for your pull request (PR). Give the branch a descriptive
+name for the changes you will make, such as `iss-10` if it is for a specific
+issue.
+
+```sh
+# create a new branch and switch to it
+git switch -c iss-10
+```
+
+> Switched to a new branch 'iss-10'
+
+### Make your changes
+
+Edit the code, write and run tests, and update the documentation as needed.
+
+#### test
+
+Changes to the code need tests to demonstrate that they work as intended:
+
+- **Python CLI** (`src/`): pytest tests in `tests/`.
+- **Quarto extension Lua filter** (`_extensions/version-selector/*.lua`):
+  pytest render tests in `tests/test_extension.py` (requires Quarto).
+- **Widget JavaScript** (`_extensions/version-selector/*.js`): `node:test` +
+  jsdom tests in `tests/js/`.
+
+Run linting and all tests with:
+
+```sh
+pixi run -e dev test
+```
+
+Also check that the demo site still renders with `pixi run render`.
+
+#### document
+
+If you have added a new feature or changed the behavior of an existing feature,
+update `README.md`, including the extension options, CSS custom properties,
+CLI usage, and action inputs/outputs as relevant.
+If your changes are in `src/`, you may need to update the docstrings as well.
+All Python modules, functions, and classes should have docstrings that follow the
+[Google format](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+For user-facing changes, add an entry to `CHANGELOG.md` under the development
+version with the PR number and your GitHub username, e.g.
+`- Fix alias handling in deploy. (#123, @username)`.
+
+### Commit and push your changes
+
+If you're not sure how often you should commit or what your commits should
+consist of, we recommend following the "atomic commits" principle where each
+commit contains one new feature, fix, or task.
+Learn more about atomic commits here:
+<https://www.freshconsulting.com/insights/blog/atomic-commits/>
+
+First, add the files that you changed to the staging area:
+
+```sh
+git add path/to/changed/files/
+```
+
+Then make the commit.
+Your commit message should follow the
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+specification.
+Briefly, each commit should start with one of the approved types such as
+`feat`, `fix`, `docs`, etc. followed by a description of the commit.
+Take a look at the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/#summary)
+for more detailed information about how to write commit messages.
+
+```sh
+git commit -m 'feat: create function for awesome feature'
+```
+
+pre-commit will enforce that your commit message and the code changes are
+styled correctly and will attempt to make corrections if needed.
+
+> Check for added large files..............................................Passed <br>
+> Fix End of Files.........................................................Passed <br>
+> Trim Trailing Whitespace.................................................Failed <br>
+> - hook id: trailing-whitespace <br>
+> - exit code: 1 <br>
+> - files were modified by this hook <br>
+>
+> Fixing path/to/changed/files/file.txt <br>
+>
+> codespell................................................................Passed <br>
+> ruff check...............................................................Passed <br>
+> ruff format..............................................................Passed <br>
+
+In the example above, one of the hooks modified a file in the proposed commit,
+so the pre-commit check failed. You can run `git diff` to see the changes that
+pre-commit made and `git status` to see which files were modified. To proceed
+with the commit, re-add the modified file(s) and re-run the commit command:
+
+```sh
+git add path/to/changed/files/file.txt
+git commit -m 'feat: create function for awesome feature'
+```
+
+This time, all the hooks either passed or were skipped
+(e.g. hooks that only run on Python code will not run if no Python files were
+committed).
+When the pre-commit check is successful, the usual commit success message
+will appear after the pre-commit messages showing that the commit was created.
+
+> Check for added large files..............................................Passed <br>
+> Fix End of Files.........................................................Passed <br>
+> Trim Trailing Whitespace.................................................Passed <br>
+> codespell................................................................Passed <br>
+> ruff check...........................................(no files to check)Skipped <br>
+> ruff format..........................................(no files to check)Skipped <br>
+> Conventional Commit......................................................Passed <br>
+> [iss-10 9ff256e] feat: create function for awesome feature <br>
+> 1 file changed, 22 insertions(+), 3 deletions(-) <br>
+
+Finally, push your changes to GitHub:
+
+```sh
+git push
+```
+
+If this is the first time you are pushing this branch, you may have to
+explicitly set the upstream branch:
+
+```sh
+git push --set-upstream origin iss-10
+```
+
+We recommend pushing your commits often so they will be backed up on GitHub.
+You can view the files in your branch on GitHub at
+`https://github.com/CCBR/quarto-version-selector/tree/<your-branch-name>`
+(replace `<your-branch-name>` with the actual name of your branch).
+
+### Create the PR
+
+Once your branch is ready, create a PR on GitHub:
+<https://github.com/CCBR/quarto-version-selector/pull/new/>
+
+Select the branch you just pushed:
+
+![Create a new PR from your branch](https://raw.githubusercontent.com/CCBR/CCBR_NextflowTemplate/48eb57ececfac68136f1daec129c4e32025f387a/.github/img/new-PR.png)
+
+Edit the PR title and description.
+The title should briefly describe the change and follow the
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+Follow the comments in the template to fill out the body of the PR, and
+you can delete the comments (everything between `<!--` and `-->`) as you go.
+If you used generative AI tools, fill out the Generative AI Usage Statement.
+Be sure to fill out the checklist, checking off items as you complete them or
+striking through any irrelevant items.
+When you're ready, click 'Create pull request' to open it.
+
+![Open the PR after editing the title and description](https://raw.githubusercontent.com/CCBR/CCBR_NextflowTemplate/48eb57ececfac68136f1daec129c4e32025f387a/.github/img/create-PR.png)
+
+Optionally, you can mark the PR as a draft if you're not yet ready for it to
+be reviewed, then change it later when you're ready.
+
+### Wait for a maintainer to review your PR
+
+We will do our best to follow the tidyverse code review principles:
+<https://code-review.tidyverse.org/>.
+The reviewer may suggest that you make changes before accepting your PR in
+order to improve the code quality or style.
+If that's the case, continue to make changes in your branch and push them to
+GitHub, and they will appear in the PR.
+The `test` GitHub Actions workflow must pass before the PR can be approved.
+
+Once the PR is approved, the maintainer will merge it and the issue(s) the PR
+links will close automatically.
+Congratulations and thank you for your contribution!
+
+### After your PR has been merged
+
+After your PR has been merged, update your local clone of the repo by
+switching to the main branch and pulling the latest changes:
+
+```sh
+git switch main
+git pull
+```
+
+It's a good idea to run `git pull` before creating a new branch so it will
+start from the most recent commits in main.
+
+## Dev notes
+
+### Updating `pixi.lock` on Dependabot PRs
+
+Dependabot can update version ranges in `pyproject.toml`, but it cannot update
+`pixi.lock`. When that happens, the `test` workflow fails because pixi installs
+with `--locked`. To fix it, regenerate the lockfile on the Dependabot branch with:
+
+```sh
+pixi lock
+```
+
+`pixi lock` only re-solves what changed in `pyproject.toml`; it does not
+upgrade other locked packages.
+
+## Helpful links for more information
+
+- [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)
+- [Quarto extension guide](https://quarto.org/docs/extensions/creating.html)
+- [semantic versioning guidelines](https://semver.org/)
+- [changelog guidelines](https://keepachangelog.com/en/1.1.0/)
+- [tidyverse code review principles](https://code-review.tidyverse.org)
+- [reproducible examples](https://www.tidyverse.org/help/#reprex)

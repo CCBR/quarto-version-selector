@@ -1,0 +1,19 @@
+---
+title: "Version Selector Example"
+---
+
+## Usage
+
+Enable the filter in `_quarto.yml`:
+
+```yaml
+filters:
+  - version-selector
+```
+
+To place the selector somewhere specific, add an element with id `version-selector`:
+
+```markdown
+::: {#version-selector}
+:::
+```

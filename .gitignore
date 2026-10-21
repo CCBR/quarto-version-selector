@@ -1,0 +1,20 @@
+# quarto
+/.quarto/
+**/*.quarto_ipynb
+_site/
+
+# python
+*.egg-info/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.github/PR_DRAFT.md
+
+# js
+node_modules/
+
+# pixi
+.pixi/*
+!.pixi/config.toml
+build/

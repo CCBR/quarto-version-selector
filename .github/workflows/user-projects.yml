@@ -1,0 +1,25 @@
+name: user-projects
+
+on:
+  issues:
+    types:
+      - assigned
+  # pull_request_target runs in the base repository context so fork PRs can use the
+  # app secrets. This is safe only because this workflow never checks out PR code.
+  pull_request_target:
+    types:
+      - assigned
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: CCBR/actions/user-projects@v0.8.0
+        with:
+          app-id: ${{ vars.CCBR_BOT_APP_ID }}
+          app-private-key: ${{ secrets.CCBR_BOT_PRIVATE_KEY }}
+          token-owner: "CCBR"
