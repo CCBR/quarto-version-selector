@@ -1,0 +1,50 @@
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+exclude: |
+  (?x)(
+      ^templates/|
+      ^pixi.lock
+   )
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=10240"]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-json
+  # spell check
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+        args: [-I, .github/WORDLIST]
+  # Quarto formatting
+  # - repo: https://github.com/jolars/panache
+  #   rev: v2.13.0
+  #   hooks:
+  #     - id: panache-format
+  #     - id: panache-lint
+  # Python formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.0
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/citation-file-format/cffconvert
+    rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c
+    hooks:
+      - id: validate-cff
+  # enforce commit format
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: []
