@@ -5,6 +5,11 @@ on:
     types: [published]
   push:
     branches: [main]
+# Deploys share one docs branch: run them one at a time. A queued run can be
+# replaced by a newer one, so the CLI also retries rejected pushes on the new tip.
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
 permissions:
   contents: write
   pages: write
