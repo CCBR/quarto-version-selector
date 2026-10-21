@@ -8,7 +8,8 @@
   --version-selector-fg-hover: var(--bs-navbar-hover-color, var(--bs-link-hover-color));
   --version-selector-bg: transparent;
   --version-selector-border: var(--bs-border-color, currentColor);
-  --version-selector-menu-bg: var(--bs-dropdown-bg, var(--bs-body-bg));
+  --version-selector-menu-fg: var(--bs-dropdown-color, var(--bs-body-color, CanvasText));
+  --version-selector-menu-bg: var(--bs-dropdown-bg, var(--bs-body-bg, Canvas));
   --version-selector-alias-bg: var(--bs-secondary-bg, rgba(127, 127, 127, 0.15));
   --version-selector-alias-fg: var(--bs-secondary-color, inherit);
   --version-selector-font-size: 0.875rem;
@@ -31,6 +32,7 @@
 
 .quarto-version-selector-menu {
   background-color: var(--version-selector-menu-bg);
+  color: var(--version-selector-menu-fg);
   font-size: var(--version-selector-font-size);
   min-width: 10rem;
 }

@@ -60,7 +60,8 @@ Override these custom properties in your own CSS/SCSS:
 | `--version-selector-fg-hover` | `var(--bs-navbar-hover-color)` |
 | `--version-selector-bg` | `transparent` |
 | `--version-selector-border` | `var(--bs-border-color)` |
-| `--version-selector-menu-bg` | `var(--bs-dropdown-bg)` |
+| `--version-selector-menu-bg` | `var(--bs-dropdown-bg)`, else the page background (`Canvas`) |
+| `--version-selector-menu-fg` | `var(--bs-dropdown-color)`, else the page text color (`CanvasText`) |
 | `--version-selector-alias-bg` | `var(--bs-secondary-bg)` |
 | `--version-selector-alias-fg` | `var(--bs-secondary-color)` |
 | `--version-selector-font-size` | `0.875rem` |
@@ -82,6 +83,9 @@ on:
     types: [published]
   push:
     branches: [main]
+concurrency: # one deploy at a time; the CLI also retries rejected pushes
+  group: docs-deploy
+  cancel-in-progress: false
 permissions:
   contents: write # push to gh-pages
   pages: write # request a Pages build after the push

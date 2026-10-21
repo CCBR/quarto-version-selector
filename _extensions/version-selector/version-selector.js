@@ -86,6 +86,10 @@
                 a.setAttribute("aria-current", "true");
             }
             a.addEventListener("click", function (ev) {
+                // let the browser handle new-tab/window clicks (Ctrl/Cmd/Shift/Alt, middle button)
+                if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) {
+                    return;
+                }
                 ev.preventDefault();
                 navigate(siteRoot, name, relPath);
             });

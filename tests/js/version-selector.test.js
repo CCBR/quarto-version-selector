@@ -148,6 +148,27 @@ test("clicking navigates to the same page when it exists", async () => {
     assert.deepEqual(nav, ["https://example.org/site/1.0/guide/page.html"]);
 });
 
+for (const mod of ["ctrlKey", "metaKey", "shiftKey", "altKey"]) {
+    test(`${mod}-click is left to the browser`, async () => {
+        const { doc, win, nav, calls } = await setup();
+        const ev = new win.MouseEvent("click", { bubbles: true, cancelable: true, button: 0, [mod]: true });
+        items(doc)[0].dispatchEvent(ev);
+        await tick();
+        assert.equal(ev.defaultPrevented, false);
+        assert.deepEqual(nav, []);
+        assert.ok(!calls.some((c) => c.method === "HEAD"));
+    });
+}
+
+test("middle-click is left to the browser", async () => {
+    const { doc, win, nav } = await setup();
+    const ev = new win.MouseEvent("click", { bubbles: true, cancelable: true, button: 1 });
+    items(doc)[0].dispatchEvent(ev);
+    await tick();
+    assert.equal(ev.defaultPrevented, false);
+    assert.deepEqual(nav, []);
+});
+
 test("clicking falls back to the version root when the page is missing", async () => {
     const { doc, nav } = await setup();
     items(doc)[0].click();
