@@ -1,0 +1,11 @@
+{
+    "name": "quarto-version-selector",
+    "private": true,
+    "description": "JS tests for the version-selector Quarto extension",
+    "scripts": {
+        "test": "node --test tests/js/*.test.js"
+    },
+    "devDependencies": {
+        "jsdom": "^26.0.0"
+    }
+}
