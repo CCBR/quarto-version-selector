@@ -1,0 +1,99 @@
+# quarto-version-selector
+
+A Quarto extension to provide a version dropdown menu in Quarto websites, plus a Python CLI to deploy the site to github actions.
+This project is heavily inspired by the mkdocs mike plugin.
+
+## Quarto extension
+
+The Quarto Extension should adhere to current guidelines.
+
+- Docs: https://quarto.org/docs/extensions/creating.html
+- Example extensions: https://github.com/quarto-ext/
+
+## Python code
+
+- Python scripts must include module and function/class docstrings.
+- Where a standard CLI framework is adopted, Python CLIs should use `click` for consistency with existing components.
+- Scripts must support `--help` and document required/optional arguments.
+- Python code must follow [PEP 8](https://peps.python.org/pep-0008/), use `snake_case`, and include type hints for public functions.
+- Scripts must raise descriptive error messages on failure and warnings when applicable. Prefer raising an exception over printing an error message, and over returning an error code.
+- Python code should pass `ruff`;
+- Each script must include a documented example usage in comments or README.
+- Tests should be written with `pytest`. Other testing frameworks may be used if justified.
+- Do not catch bare exceptions. The exception type must always be specified.
+- Only include one return statement at the end of a function.
+
+## Commit messages
+
+- Check for user approval before running commit commands. The `git commit` command should be shown expanded (with the full `-m` message text visible), not collapsed or abbreviated, so the user can see the exact message before it runs.
+- If approval has not been given, proceed with code changes and tests only; do not commit.
+- Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) (as enforced in `CONTRIBUTING.md`).
+- Generate messages from staged changes only (`git diff --staged`); do not include unrelated work.
+- Commits should be atomic: one logical change per commit.
+- If mixed changes are present, split into multiple logical commits; the number of commits does not need to equal the number of files changed.
+- Before staging, review `git status` and `git diff` to confirm the change set is small enough to describe in one sentence; if not, it likely needs to be split.
+- Do not blanket-stage with `git add .` or `git add -A`; stage files or hunks individually (`git add <file>`, `git add -p`) so unrelated changes are not swept into the same commit.
+- When splitting into multiple commits, order them so each commit leaves the repository in a working state (e.g., dependencies/config before the code that uses them).
+- Do not mix mechanical changes (formatting, renames, regenerated files) with substantive logic changes in the same commit.
+- Subject format must be: `<type>(optional-scope): short imperative summary` (<=72 chars), e.g., `fix(profile): update release table parser`.
+- Add a body only when needed to explain **why** and notable impact; never include secrets, tokens, PHI, or large diffs.
+- For commits containing any AI-generated code, commit messages, or any other AI-generated content,
+  add this final italicized footer line in the commit message body: "_AI assistance: [model]_".
+  Replace [model] with the actual model version used, e.g. Claude Sonnet 5, GPT-5.6 Sol, etc.
+
+## Pull request (PR) process
+
+- PR titles must follow Conventional Commits format (see "Commit messages" section).
+- When opening a PR, use the request template (`.github/PULL_REQUEST_TEMPLATE.md`) and fill out all sections of the template in the PR description. Do not allow the developer to proceed with opening a PR if the PR does not fill out all sections of the template.
+- Go through the PR template **section-by-section** in order:
+  1. **Changes**: Summarize user-facing behavior changes, bug fixes, or design decisions.
+  2. **Issues**: Reference any related issues using keywords.
+  3. **Generative AI Usage Statement**: Determine if AI was used for any part of this PR. If yes, uncomment this section and fill it in. If no, leave commented or uncomment and state "No generative AI tools were used".
+  4. **PR Checklist**: Process items sequentially (see checklist workflow below).
+- Write drafted PR descriptions to a gitignored file at [.github/PR_DRAFT.md](.github/PR_DRAFT.md) (overwrite if it already exists). Tell the developer where the file is and instruct them to review and edit it before using it — do not treat a draft as final or ready to ship without that review.
+- When drafting a PR description, initialize every checklist item in [.github/PR_DRAFT.md](.github/PR_DRAFT.md) with one explicit state:
+  - use `- [x]` when the item is verified by evidence (agent-run command output or explicit developer confirmation),
+  - use `- [ ]` when the item is relevant and pending verification,
+  - use `- ~[ ] item text~` when the item is not applicable.
+- Before processing checklist items, examine the current branch state with `git status` and `git diff` to understand what has already been modified. Do not add CHANGELOG.md entries or other changes that may already be in the branch.
+- Quick open: use Cmd+Click on [.github/PR_DRAFT.md](.github/PR_DRAFT.md) in the editor.
+- Before asking for permission to run `gh pr create`, explicitly prompt the developer to open [.github/PR_DRAFT.md](.github/PR_DRAFT.md), review/edit it, and confirm that review is complete.
+- Apply this formatting consistently for both initial draft creation and all later checklist edits.
+- Process checklist items sequentially, one item at a time, before opening the PR.
+- For each checklist item:
+  - collect evidence,
+  - document evidence in the Changes section if it supports a feature or fix (e.g., "Added examples using synthetic data"),
+  - update only the checklist state (checked, unchecked, or crossed out) in [.github/PR_DRAFT.md](.github/PR_DRAFT.md) immediately — do not append evidence descriptions to checklist items.
+- If evidence cannot be collected automatically, ask the developer for confirmation, record that confirmation in the PR draft, and then update the checklist state.
+- Agents may open a PR with relevant pending items left as `- [ ]` only if the PR is opened as a draft.
+- Agents must not open a non-draft (ready-for-review) PR while any relevant checklist item remains pending (`- [ ]`).
+- Whenever an AI agent assists with creating or drafting a PR (including this exact workflow — a developer asking the agent to open or draft a PR), the PR is considered to have generative AI-assisted content and must be labeled `AI-assisted`.
+- The "Generative AI Usage Statement" heading in the PR template (which is commented out by default) must be uncommented and filled in with a brief, concise statement of how generative AI was used (model used, high-level prompt intent, manual review confirmation, etc.), regardless of whether the underlying code/commits were themselves generated by generative AI.
+- To open the PR, either:
+  - Instruct the user to paste the reviewed contents of [.github/PR_DRAFT.md](.github/PR_DRAFT.md) into GitHub's web UI, or
+  - run `gh pr create --title "<conventional-commit-style title>" --body-file .github/PR_DRAFT.md` (add `--draft` if the PR should open as a draft, and `--label "AI-assisted"` if applicable). Only run `gh pr create` with explicit developer approval, and only after prompting the developer to open [.github/PR_DRAFT.md](.github/PR_DRAFT.md) and receiving confirmation that review/edit is complete. Point the user to [.github/PR_DRAFT.md](.github/PR_DRAFT.md) for final review.
+  - If the AI-assisted label was not added at creation time, add it afterwards with `gh pr edit <PR-number-or-URL> --add-label "AI-assisted"`.
+- When new features, bug fixes, or other behavioral changes are introduced to
+  the code, unit tests must be added or updated to cover the new or changed
+  functionality; unit tests should not be skipped without a strong reason.
+- If there are any API or other user-facing changes, the documentation must be updated both inline via comments and long-form docs.
+- Before a PR can be moved from draft to "ready for review", all of the relevant checklist items must be checked, and any
+irrelevant checklist items should be crossed out.
+- If there are merge conflicts, a human developer must resolve them. AI agents must not agree to assist with resolving merge conflicts. Human developers who are unsure how to proceed should reach out to the lead maintainer or code owner.
+- The `build` github actions workflow must pass before the PR can be approved.
+
+### Changelog
+
+The changelog for the repository is maintained in `CHANGELOG.md`  at the root of the repository.
+Each pull request that introduces user-facing changes must include a concise
+entry with the **PR number** (not the issue number) and author's github username tagged.
+Developer-only changes (i.e. updates to CI workflows, development notes, internal developer documentation like AGENTS.md or PR templates, etc.)
+should never be included in the changelog.
+
+Example:
+
+```
+## development version
+
+- Fix bug in `detect_absolute_paths()` to ignore comments. (#123, @github-username)
+```
