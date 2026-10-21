@@ -44,8 +44,8 @@ def test_version_is_single_sourced():
     assert not re.search(r"^version:", ext_yml, re.MULTILINE)
     assert "version = read_version()" in lua
     assert not re.search(r'version = "[^"]+"', lua)
-    for link in [ROOT / "VERSION", ROOT / "src" / "quarto_version_selector" / "VERSION"]:
-        assert link.resolve() == (EXT_DIR / "VERSION").resolve()
+    assert (ROOT / "VERSION").resolve() == (EXT_DIR / "VERSION").resolve()
+    assert not (ROOT / "src" / "quarto_version_selector" / "VERSION").exists()
 
 
 def test_package_version_matches_version_file():

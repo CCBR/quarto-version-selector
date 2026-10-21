@@ -1,5 +1,6 @@
 """Deploy versioned Quarto websites to a git branch."""
 
-from importlib.resources import files
+from importlib.metadata import version
 
-__version__ = files(__package__).joinpath("VERSION").read_text().strip()
+# Set at build time from _extensions/version-selector/VERSION (see pyproject.toml).
+__version__ = version("quarto-version-selector")

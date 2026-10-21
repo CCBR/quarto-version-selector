@@ -22,7 +22,7 @@ quarto-version-selector = "quarto_version_selector.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-quarto_version_selector = ["VERSION", "versions.schema.json"]
+quarto_version_selector = ["versions.schema.json"]
 
 [tool.setuptools.dynamic]
 version = { file = "_extensions/version-selector/VERSION" }
