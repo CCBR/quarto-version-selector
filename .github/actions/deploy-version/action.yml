@@ -27,6 +27,15 @@ inputs:
   dry-run:
     description: "Print the deploy command without deploying."
     default: "false"
+  path:
+    description: "Path to the Quarto project to render, relative to the repository root (e.g. docs)."
+    default: "."
+  site-dir:
+    description: "Rendered site directory, relative to `path`. Must match the project's `output-dir`."
+    default: "_site"
+  require-descendant:
+    description: "Fail (instead of warn) when the commit does not descend from the latest release."
+    default: "false"
 outputs:
   version:
     description: "The version of the docs being deployed."
@@ -53,9 +62,11 @@ runs:
       run: pip install --upgrade pip "git+https://github.com/CCBR/quarto-version-selector.git@${{ inputs.version-selector-version }}"
     - name: Render site
       shell: bash
+      env:
+        PROJECT_PATH: ${{ inputs.path }}
       run: |
         cd "$GITHUB_WORKSPACE"
-        quarto render
+        quarto render "$PROJECT_PATH"
     - name: Set version & alias
       id: set-version
       shell: python {0}
@@ -63,18 +74,29 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         STRICT_SEMVER: ${{ inputs.strict-semver }}
+        REQUIRE_DESCENDANT: ${{ inputs.require-descendant }}
         REPO: ${{ github.repository }}
       run: |
         import os
+        import warnings
 
         from quarto_version_selector.versions import get_version_and_alias
 
         os.chdir(os.environ["GITHUB_WORKSPACE"])
-        version, alias = get_version_and_alias(
-            release_tag=os.environ.get("RELEASE_TAG") or None,
-            strict_semver=os.environ["STRICT_SEMVER"] == "true",
-            repo=os.environ["REPO"],
-        )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            try:
+                version, alias = get_version_and_alias(
+                    release_tag=os.environ.get("RELEASE_TAG") or None,
+                    strict_semver=os.environ["STRICT_SEMVER"] == "true",
+                    repo=os.environ["REPO"],
+                    require_descendant=os.environ["REQUIRE_DESCENDANT"] == "true",
+                )
+            except (ValueError, RuntimeError) as err:
+                print(f"::error::{err}")
+                raise SystemExit(1) from None
+        for warning in caught:
+            print(f"::warning::{warning.message}")
         print(f"version={version} alias={alias}")
         with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
             fh.write(f"version={version}\nalias={alias}\n")
@@ -85,9 +107,10 @@ runs:
         VERSION: ${{ steps.set-version.outputs.version }}
         ALIAS: ${{ steps.set-version.outputs.alias }}
         DOCS_BRANCH: ${{ inputs.docs-branch }}
+        SITE_DIR: ${{ inputs.path }}/${{ inputs.site-dir }}
       run: |
         cd "$GITHUB_WORKSPACE"
-        cmd=(quarto-version-selector deploy --version "$VERSION" --branch "$DOCS_BRANCH" --push)
+        cmd=(quarto-version-selector deploy --version "$VERSION" --site-dir "$SITE_DIR" --branch "$DOCS_BRANCH" --push)
         if [ -n "$ALIAS" ]; then
           cmd+=(--alias "$ALIAS")
           [ "$ALIAS" = "latest" ] && cmd+=(--set-default latest)
