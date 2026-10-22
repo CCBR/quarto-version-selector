@@ -133,6 +133,10 @@ Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.gith
 - `version`: the version deployed.
 - `alias`: the alias deployed (empty if none).
 
+## Migrating from mkdocs + mike
+
+The docs branch layout and `versions.json` format match mike's, so you can switch an existing mike site to Quarto without touching the versions mike already deployed. Their pages keep mike's version selector, which also lists new Quarto versions. See the step-by-step guide: [Migrating from mkdocs + mike](https://ccbr.github.io/quarto-version-selector/mike.html) ([source](mike.qmd)).
+
 ## CLI
 
 ```bash

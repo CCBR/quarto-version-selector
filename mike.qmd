@@ -1,0 +1,164 @@
+---
+title: "Migrating from mkdocs + mike"
+---
+
+These steps switch a docs site from [mkdocs](https://www.mkdocs.org/) with [mike](https://github.com/jimporter/mike) to Quarto with this extension. Versions that mike already deployed stay exactly as they are; only new deploys are built with Quarto.
+
+This works because both tools use the same layout on the docs branch:
+
+- each version is a top-level folder (`0.7/`, `dev/`), and aliases such as `latest` are folders or symlinks next to them,
+- a root `versions.json` lists every version as `{"version", "title", "aliases"}`,
+- the root `index.html` redirects to the default version.
+
+So the new Quarto selector lists the old versions, and the old pages keep mike's own selector (Material's version menu, or mike's `version-select.js` dropdown for other themes). That selector reads the same `versions.json`, so it also lists the new Quarto versions. Choosing a version from an old page opens that version's home page.
+
+The steps assume the docs live in `docs/` with `mkdocs.yml` at the repository root and the docs branch is `gh-pages`. A complete example is [CCBR/CHAMPAGNE#394](https://github.com/CCBR/CHAMPAGNE/pull/394).
+
+## 1. Check the existing `versions.json`
+
+```bash
+pip install git+https://github.com/CCBR/quarto-version-selector.git
+quarto-version-selector validate
+```
+
+`validate` checks `versions.json` on `origin/gh-pages` without changing anything. `deploy` refuses to overwrite a file that doesn't validate, so fix any errors before the first deploy. mike sometimes adds a `properties` field (e.g. `{"hidden": true}`), which isn't part of this format; remove it from `versions.json` on the docs branch.
+
+## 2. Install the extensions
+
+From a new branch, install the extension (and a theme, if you use one, e.g. [quarto-fnl](https://github.com/CCBR/quarto-fnl)) into the docs folder:
+
+```bash
+git switch -c quarto
+cd docs
+quarto add CCBR/quarto-version-selector --no-prompt
+quarto add CCBR/quarto-fnl --no-prompt   # optional theme
+cd ..
+```
+
+## 3. Write `docs/_quarto.yml`
+
+Translate `mkdocs.yml` into a Quarto website. The `nav:` section becomes the sidebar; `site_name`, `repo_url`, and `extra.social` become `website` fields and navbar links. Keep the `.md` pages as they are; Quarto renders Markdown files directly.
+
+```yaml
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "My Pipeline"
+  site-url: https://ccbr.github.io/my-pipeline
+  repo-url: https://github.com/CCBR/my-pipeline
+  repo-subdir: docs
+  repo-actions: [edit, issue]
+  navbar:
+    left:
+      - href: index.md
+        text: Home
+  sidebar:
+    style: docked
+    contents:            # from the mkdocs `nav:`
+      - href: index.md
+        text: Home
+      - section: User Guide
+        contents:
+          - href: guide/usage.md
+            text: Usage
+
+filters:
+  - version-selector
+
+format:
+  html:                  # or fnl-html with quarto-fnl
+    toc: true
+    code-copy: true
+```
+
+## 4. Convert mkdocs-only Markdown
+
+Find the syntax Quarto doesn't understand:
+
+```bash
+grep -rn -E -- '--8<--|^ *(!!!|\?\?\?) |^=== |\]\(/' docs --include='*.md'
+```
+
+| mkdocs | Quarto |
+|---|---|
+| `--8<-- "README.md"` (paths relative to the repo root) | `{{{< include ../README.md >}}}` (paths relative to the page) |
+| `!!! note "Title"` admonitions | `::: {.callout-note title="Title"}` ... `:::` |
+| `??? note` collapsible admonitions | `::: {.callout-note collapse="true"}` |
+| `=== "Tab"` content tabs | `::: {.panel-tabset}` with `## Tab` headings |
+| root-relative links such as `](/page.md)` | page-relative links such as `](../page.md)` |
+
+If the README is included in the site, change its relative links to repository files outside `docs/` (e.g. `.github/CONTRIBUTING.md`) into absolute GitHub URLs, because they don't resolve inside the site.
+
+Custom CSS, JavaScript, and theme overrides (`extra_css`, `extra_javascript`, `custom_dir`) usually aren't needed: Quarto has code-copy buttons, search, and Google Analytics (`website: google-analytics:`) built in.
+
+## 5. Render and preview
+
+```bash
+quarto render docs        # fix every warning, e.g. unresolved links
+quarto preview docs       # live preview of the new site
+```
+
+The version selector only appears once the site is served next to `versions.json`, so `quarto preview` doesn't show it.
+
+## 6. Remove mkdocs
+
+```bash
+git rm -r mkdocs.yml docs/requirements.txt docs/overrides docs/css docs/js \
+  .github/workflows/docs-mkdocs.yml
+echo "/docs/_site/" >> .gitignore
+printf '/.quarto/\n/_site/\n' >> docs/.gitignore
+```
+
+Adjust the paths to what the repository has. If it uses pre-commit, add `^docs/_extensions/` to the top-level `exclude:` so formatters don't rewrite the installed extensions.
+
+## 7. Deploy with GitHub Actions
+
+Add `.github/workflows/docs-quarto.yml`:
+
+```yaml
+name: docs
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "**.md"
+      - .github/workflows/docs-quarto.yml
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+permissions:
+  contents: write
+  pages: write
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: docs
+```
+
+It deploys like mike did: a push to `main` deploys `dev/`, and a release deploys `major.minor/` and moves `latest` to the newest release. A `latest` symlink created by mike is replaced by a copy of the release. If the repository uses squash or rebase merges, release tags may not be ancestors of `main`; the action warns and still deploys `dev/`.
+
+## 8. Update links and open a PR
+
+- Point the README docs badge at the new workflow (`docs-mkdocs.yml` → `docs-quarto.yml`).
+- Quarto pages end in `.html`: links to `https://<site>/latest/guide/usage/` become `.../latest/guide/usage.html`. Links into old versions keep mike's directory style and keep working.
+- Mention how to preview the docs in the contributing guide.
+
+After merging, the push to `main` deploys `dev/` with Quarto, and the next release deploys its version and moves `latest`. Check that GitHub Pages publishes from the `gh-pages` branch (**Settings → Pages → Deploy from a branch**).
+
+## Rolling back
+
+Nothing on `gh-pages` is deleted. To undo a Quarto deploy, revert its commit on the docs branch: each deploy is a single commit named `docs: deploy <version>`.
