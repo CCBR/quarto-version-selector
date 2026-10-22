@@ -39,8 +39,13 @@ format:
 ```yaml
 version-selector:
   versions-file: versions.json   # relative to the root of the docs branch
-  placement: auto                # auto (navbar, else fixed top-right) | navbar | fixed | none
+  placement: auto                # auto | navbar | navbar-right | fixed | none
 ```
+
+- `auto` / `navbar`: the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, `auto` pins it to the top-right of the page.
+- `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).
+- `fixed`: pinned to the top-right corner of the page.
+- `none`: only shown in a `#version-selector` element (see below).
 
 To place the selector somewhere specific, add an empty div with id `version-selector`:
 

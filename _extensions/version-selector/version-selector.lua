@@ -4,7 +4,7 @@
 -- Optional document/project metadata:
 --   version-selector:
 --     versions-file: versions.json   # path relative to the site root of all versions
---     placement: auto                # auto | navbar | fixed | none
+--     placement: auto                # auto | navbar | navbar-right | fixed | none
 
 -- The extension's version is read from the VERSION file next to this script,
 -- the single source of truth also used by the Python package and release tooling.
