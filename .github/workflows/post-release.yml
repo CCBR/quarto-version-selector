@@ -28,3 +28,24 @@ jobs:
           github-token: ${{ github.token }}
           version-filepath: _extensions/version-selector/VERSION
           update-sliding-tags: false
+      # The action only commits VERSION; mirror the new dev version into
+      # _extension.yml on the post-release PR branch.
+      - name: Sync extension version
+        env:
+          PR_BRANCH: release/${{ github.event.release.tag_name }}
+        run: |
+          git fetch origin "$PR_BRANCH"
+          git switch "$PR_BRANCH" 2>/dev/null || git switch -c "$PR_BRANCH" "origin/$PR_BRANCH"
+          git reset --hard "origin/$PR_BRANCH"
+          # the script exits 1 after rewriting the file, and on errors
+          if python .github/scripts/sync_extension_version.py; then
+            echo "_extension.yml already matches VERSION"
+            exit 0
+          fi
+          if git diff --quiet -- _extensions/version-selector/_extension.yml; then
+            echo "::error::sync_extension_version.py failed without updating _extension.yml"
+            exit 1
+          fi
+          git add _extensions/version-selector/_extension.yml
+          git commit -m "chore: 🤖 sync _extension.yml version after release"
+          git push origin "$PR_BRANCH"

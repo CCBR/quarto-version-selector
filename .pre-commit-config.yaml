@@ -34,6 +34,14 @@ repos:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: sync-extension-version
+        name: sync _extension.yml version with VERSION
+        entry: python .github/scripts/sync_extension_version.py
+        language: python
+        files: ^_extensions/version-selector/(VERSION|_extension\.yml)$
+        pass_filenames: false
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
