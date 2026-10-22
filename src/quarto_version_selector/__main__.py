@@ -8,6 +8,7 @@ Example usage::
     quarto-version-selector deploy --version 1.2 --alias latest --push
     quarto-version-selector alias 1.2 stable --push
     quarto-version-selector set-default latest --push
+    quarto-version-selector migrate-mike --dry-run
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from . import __version__
 from .deploy import VERSIONS_FILE, docs_worktree, set_default_version
 from .deploy import alias as alias_version
 from .deploy import deploy as deploy_version
+from .migrate import migrate_mike
 from .versions import get_version_and_alias, read_versions
 
 _branch = click.option("--branch", default="gh-pages", show_default=True, help="Docs branch.")
@@ -146,6 +148,42 @@ def set_default(target: str, branch: str, remote: str, push: bool) -> None:
     """Redirect the site root to TARGET (a version or alias)."""
     set_default_version(target, branch=branch, remote=remote, push=push)
     click.echo(f"Default version set to {target}")
+
+
+@cli.command("migrate-mike")
+@click.option(
+    "--project-dir",
+    default="docs",
+    show_default=True,
+    help="Current Quarto project directory; supplies _quarto.yml and _extensions.",
+)
+@click.option("--versions", "versions", multiple=True, help="Only migrate this version (repeatable).")
+@_branch
+@_remote
+@_push
+@click.option("--dry-run", is_flag=True, help="Print the version-to-tag plan without rendering or deploying.")
+def migrate_mike_command(
+    project_dir: str, versions: tuple[str, ...], branch: str, remote: str, push: bool, dry_run: bool
+) -> None:
+    """
+    Re-render versions deployed by mkdocs + mike with Quarto and redeploy them.
+
+    Each version in versions.json (except dev) is rebuilt from its newest
+    release tag: the mkdocs nav becomes a Quarto sidebar, snippets become
+    includes, and the current project's theme and extensions are used.
+    """
+    try:
+        migrate_mike(
+            project_dir=project_dir,
+            versions=versions,
+            branch=branch,
+            remote=remote,
+            push=push,
+            dry_run=dry_run,
+            echo=click.echo,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as err:
+        raise click.ClickException(str(err)) from err
 
 
 @cli.command()

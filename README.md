@@ -157,6 +157,25 @@ Run `quarto-version-selector <command> --help` for all options. Deploys use a te
 ## Development
 
 With [Pixi](https://pixi.sh/latest/installation/):
+### Migrating from mkdocs + mike
+
+`migrate-mike` rebuilds the versions mike deployed with Quarto, so every version in the dropdown gets the new theme. First convert the current docs to a Quarto project (default `docs/`, with the `version-selector` filter). Then run:
+
+```bash
+quarto-version-selector migrate-mike --dry-run            # print version -> release tag plan
+quarto-version-selector migrate-mike                      # render + deploy to the local gh-pages
+quarto-version-selector migrate-mike --versions 0.7 --push
+```
+
+For each version in `versions.json` except `dev` (mike writes the same format), `migrate-mike` checks out the newest release tag for that `major.minor` in a temporary worktree. Then it:
+
+- turns the `mkdocs.yml` `nav` into a Quarto sidebar,
+- turns `--8<-- "file"` snippets into `{{< include >}}` shortcodes,
+- makes root-relative page links relative, and points README links to other repo files at GitHub for that tag,
+- renders the result with the current project's `_quarto.yml` (theme, filters, footer) and `_extensions`.
+
+Each rebuilt version replaces the mike-built folder, and existing aliases such as `latest` are kept. The navbar of old versions is reduced to a Home link, because current navbar targets may not exist in old releases. Admonitions (`!!! note`) and other mkdocs-only Markdown extensions are not converted.
+
 
 ```bash
 pixi run render            # quarto render the demo site
