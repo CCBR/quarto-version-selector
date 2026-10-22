@@ -195,14 +195,14 @@ test("clicking falls back to the version root on network error", async () => {
 });
 
 for (const placement of [undefined, "auto", "navbar"]) {
-    test(`placement=${placement ?? "default"} mounts at the end of the left navbar menu`, async () => {
+    test(`placement=${placement ?? "default"} mounts as the first item of the left navbar menu`, async () => {
         const { doc } = await setup({ placement });
         const left = doc.querySelector(".navbar-nav.me-auto");
-        const item = left.lastElementChild;
+        const item = left.firstElementChild;
         assert.equal(item.tagName, "LI");
         assert.ok(item.classList.contains("nav-item"));
         assert.equal(item.firstElementChild, selector(doc));
-        assert.equal(left.firstElementChild.querySelector("#home").textContent, "Home");
+        assert.equal(item.nextElementSibling.querySelector("#home").textContent, "Home");
         assert.ok(selector(doc).classList.contains("quarto-version-selector-navbar"));
     });
 }

@@ -42,7 +42,7 @@ version-selector:
   placement: auto                # auto | navbar | navbar-right | fixed | none
 ```
 
-- `auto` / `navbar`: the end of the left navbar menu (after the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, `auto` pins it to the top-right of the page.
+- `auto` / `navbar`: the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, `auto` pins it to the top-right of the page.
 - `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).
 - `fixed`: pinned to the top-right corner of the page.
 - `none`: only shown in a `#version-selector` element (see below).

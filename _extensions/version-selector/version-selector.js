@@ -143,11 +143,11 @@
                 return;
             }
             if (placement !== "navbar-right" && left) {
-                // Last item of the left navbar menu, as a Bootstrap nav item.
+                // First item of the left navbar menu, as a Bootstrap nav item.
                 var item = document.createElement("li");
                 item.className = "nav-item quarto-version-selector-item";
                 item.appendChild(widget);
-                left.appendChild(item);
+                left.insertBefore(item, left.firstChild);
                 return;
             }
             var host = tools || collapse || container;
