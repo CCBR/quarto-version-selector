@@ -18,8 +18,15 @@ const VERSIONS = [
 
 const NAVBAR = `
 <header id="quarto-header"><nav class="navbar"><div class="container-fluid">
-  <div class="collapse navbar-collapse"></div>
-  <div class="quarto-navbar-tools"><a id="gh">gh</a></div>
+  <div class="collapse navbar-collapse">
+    <ul class="navbar-nav navbar-nav-scroll me-auto"><li class="nav-item"><a id="home">Home</a></li></ul>
+    <div class="quarto-navbar-tools"><a id="gh">gh</a></div>
+  </div>
+</div></nav></header>`;
+
+const NAVBAR_NO_LEFT = `
+<header id="quarto-header"><nav class="navbar"><div class="container-fluid">
+  <div class="collapse navbar-collapse"><div class="quarto-navbar-tools"><a id="gh">gh</a></div></div>
 </div></nav></header>`;
 
 // The script assigns window.location.href, which jsdom cannot follow;
@@ -187,11 +194,28 @@ test("clicking falls back to the version root on network error", async () => {
     assert.deepEqual(nav, ["https://example.org/site/dev/"]);
 });
 
-test("auto placement mounts at the start of the navbar tools", async () => {
-    const { doc } = await setup();
+for (const placement of [undefined, "auto", "navbar"]) {
+    test(`placement=${placement ?? "default"} mounts at the end of the left navbar menu`, async () => {
+        const { doc } = await setup({ placement });
+        const left = doc.querySelector(".navbar-nav.me-auto");
+        const item = left.lastElementChild;
+        assert.equal(item.tagName, "LI");
+        assert.ok(item.classList.contains("nav-item"));
+        assert.equal(item.firstElementChild, selector(doc));
+        assert.equal(left.firstElementChild.querySelector("#home").textContent, "Home");
+        assert.ok(selector(doc).classList.contains("quarto-version-selector-navbar"));
+    });
+}
+
+test("placement=navbar-right mounts at the start of the navbar tools", async () => {
+    const { doc } = await setup({ placement: "navbar-right" });
     const tools = doc.querySelector(".quarto-navbar-tools");
     assert.equal(tools.firstElementChild, selector(doc));
-    assert.ok(selector(doc).classList.contains("quarto-version-selector-navbar"));
+});
+
+test("without a left navbar menu the selector goes in the navbar tools", async () => {
+    const { doc } = await setup({ body: NAVBAR_NO_LEFT });
+    assert.equal(doc.querySelector(".quarto-navbar-tools").firstElementChild, selector(doc));
 });
 
 test("falls back to the navbar collapse when there are no tools", async () => {

@@ -80,6 +80,11 @@
   align-self: center;
 }
 
+.quarto-version-selector-item {
+  display: flex;
+  align-items: center;
+}
+
 .quarto-version-selector-fixed {
   position: fixed;
   top: 0.5rem;

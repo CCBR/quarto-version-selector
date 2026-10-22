@@ -131,16 +131,32 @@
         }
         if (placement === "none") return;
         if (placement !== "fixed") {
-            var tools = document.querySelector("#quarto-header .quarto-navbar-tools");
-            var collapse = document.querySelector("#quarto-header .navbar-collapse");
-            var container = document.querySelector("#quarto-header .navbar .container-fluid, #quarto-header .navbar > .container");
+            var header = "#quarto-header ";
+            var left = document.querySelector(header + ".navbar-collapse .navbar-nav.me-auto") ||
+                document.querySelector(header + ".navbar-collapse .navbar-nav");
+            var tools = document.querySelector(header + ".quarto-navbar-tools");
+            var collapse = document.querySelector(header + ".navbar-collapse");
+            var container = document.querySelector(header + ".navbar .container-fluid, " + header + ".navbar > .container");
+            widget.classList.add("quarto-version-selector-navbar");
+            if (placement === "navbar-right" && tools) {
+                tools.insertBefore(widget, tools.firstChild);
+                return;
+            }
+            if (placement !== "navbar-right" && left) {
+                // Last item of the left navbar menu, as a Bootstrap nav item.
+                var item = document.createElement("li");
+                item.className = "nav-item quarto-version-selector-item";
+                item.appendChild(widget);
+                left.appendChild(item);
+                return;
+            }
             var host = tools || collapse || container;
             if (host) {
-                widget.classList.add("quarto-version-selector-navbar");
                 if (tools) host.insertBefore(widget, host.firstChild);
                 else host.appendChild(widget);
                 return;
             }
+            widget.classList.remove("quarto-version-selector-navbar");
         }
         widget.classList.add("quarto-version-selector-fixed");
         document.body.appendChild(widget);
