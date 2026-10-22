@@ -13,6 +13,7 @@ Example usage::
 from __future__ import annotations
 
 import os
+import warnings
 from pathlib import Path
 
 import click
@@ -39,21 +40,36 @@ def cli() -> None:
 @click.option("--latest-release-tag", default=None, help="Latest release tag; queried with `gh` if omitted.")
 @click.option("--repo", default=None, help="GitHub repo (owner/name) for the `gh` lookup.")
 @click.option("--strict-semver/--no-strict-semver", default=True, show_default=True)
+@click.option(
+    "--require-descendant/--no-require-descendant",
+    default=False,
+    show_default=True,
+    help="Fail (instead of warn) if HEAD does not descend from the latest release.",
+)
 @click.option("--github-output", is_flag=True, help="Also write version/alias to $GITHUB_OUTPUT.")
 def get_version(
     release_tag: str | None,
     latest_release_tag: str | None,
     repo: str | None,
     strict_semver: bool,
+    require_descendant: bool,
     github_output: bool,
 ) -> None:
     """Print the docs VERSION and ALIAS for the current commit."""
-    version, alias = get_version_and_alias(
-        release_tag=release_tag or None,
-        latest_release_tag=latest_release_tag or None,
-        strict_semver=strict_semver,
-        repo=repo,
-    )
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            version, alias = get_version_and_alias(
+                release_tag=release_tag or None,
+                latest_release_tag=latest_release_tag or None,
+                strict_semver=strict_semver,
+                repo=repo,
+                require_descendant=require_descendant,
+            )
+    except (ValueError, RuntimeError) as err:
+        raise click.ClickException(str(err)) from err
+    for warning in caught:
+        click.echo(f"Warning: {warning.message}", err=True)
     click.echo(f"version={version}")
     click.echo(f"alias={alias}")
     if github_output:

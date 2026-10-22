@@ -39,8 +39,13 @@ format:
 ```yaml
 version-selector:
   versions-file: versions.json   # relative to the root of the docs branch
-  placement: auto                # auto (navbar, else fixed top-right) | navbar | fixed | none
+  placement: auto                # auto | navbar | navbar-right | fixed | none
 ```
+
+- `auto` / `navbar`: the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, `auto` pins it to the top-right of the page.
+- `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).
+- `fixed`: pinned to the top-right corner of the page.
+- `none`: only shown in a `#version-selector` element (see below).
 
 To place the selector somewhere specific, add an empty div with id `version-selector`:
 
@@ -100,12 +105,13 @@ jobs:
       - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # path: docs # if the Quarto project is in a subfolder
 ```
 
 - **Release** of the newest version (e.g. `v1.2.0`) deploys `1.2/`, aliases it as `latest`, and points the root at `latest/`.
 - **Release** of an older version deploys `1.1/` with no alias.
 - **Push to main** deploys `dev/`.
-- The action fails if the commit is not a descendant of the latest release.
+- If the commit does not descend from the latest release (common with squash or rebase merges), the action warns and still deploys `dev/`. Set `require-descendant: true` to fail instead.
 
 Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch). Pushes made with `GITHUB_TOKEN` don't trigger a Pages build on their own, so the action requests one after deploying (this needs `pages: write`).
 
@@ -118,6 +124,9 @@ Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.gith
 - `github-actor`: username for the deploy commit. Default: `41898282+github-actions[bot]`.
 - `strict-semver`: require strict semantic versioning in release tags. Default: `true`.
 - `dry-run`: print the deploy command without deploying. Default: `false`.
+- `path`: Quarto project directory, relative to the repo root (e.g. `docs`). Default: `.`.
+- `site-dir`: rendered site directory relative to `path`; must match the project's `output-dir`. Default: `_site`.
+- `require-descendant`: fail instead of warn when the commit does not descend from the latest release. Default: `false`.
 
 ### Outputs
 
