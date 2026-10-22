@@ -9,4 +9,4 @@ This is the first release of quarto-version-selector 🎉
 - `get-version` no longer fails when the commit does not descend from the latest release (e.g. after squash or rebase merges); it warns and deploys `dev`. Use `--require-descendant` (or the action's `require-descendant` input) for the strict behavior. (#6, @kelly-sovacool)
 - Missing release tags now produce a readable error suggesting `git fetch --tags` instead of a traceback. (#6, @kelly-sovacool)
 - `_extension.yml` now includes a `version` field, kept in sync with the `VERSION` file by a pre-commit hook. (#6, @kelly-sovacool)
-- New `migrate-mike` command re-renders docs versions deployed by mkdocs + mike with Quarto and redeploys them, keeping aliases. (@kelly-sovacool)
+- New `migrate-mike` command re-renders docs versions deployed by mkdocs + mike with Quarto and redeploys them, keeping aliases. (#7, @kelly-sovacool)
