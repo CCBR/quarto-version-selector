@@ -38,10 +38,10 @@ def test_extension_metadata():
 
 
 def test_version_is_single_sourced():
-    """The extension's VERSION file is the only place the version is written."""
+    """VERSION is the source of truth; _extension.yml mirrors it via the sync script."""
     ext_yml = (EXT_DIR / "_extension.yml").read_text()
     lua = (EXT_DIR / "version-selector.lua").read_text()
-    assert not re.search(r"^version:", ext_yml, re.MULTILINE)
+    assert re.search(rf"^version: {re.escape(VERSION)}$", ext_yml, re.MULTILINE)
     assert "version = read_version()" in lua
     assert not re.search(r'version = "[^"]+"', lua)
     tracked = subprocess.run(
@@ -115,3 +115,19 @@ def test_non_html_format_is_untouched(tmp_path):
     proj = render(tmp_path, "project:\n  type: default\nfilters:\n  - version-selector\nformat: gfm\n")
     md = (proj / "index.md").read_text()
     assert "version-selector" not in md
+
+
+def test_sync_extension_version():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "sync", ROOT / ".github" / "scripts" / "sync_extension_version.py"
+    )
+    sync = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sync)
+    assert (
+        sync.synced_extension_yml("title: X\nauthor: A\n", "1.2.3") == "title: X\nauthor: A\nversion: 1.2.3\n"
+    )
+    assert sync.synced_extension_yml("title: X\nversion: 0.1.0\n", "1.2.3") == "title: X\nversion: 1.2.3\n"
+    with pytest.raises(ValueError, match="empty"):
+        sync.synced_extension_yml("title: X\n", "")

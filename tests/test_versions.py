@@ -87,8 +87,23 @@ def test_version_not_descendant(repo):
     git("tag", "v1.0.0", cwd=repo)
     git("checkout", "-q", "main", cwd=repo)
     commit(repo, "c")
+    with pytest.warns(UserWarning, match="not a descendant"):
+        assert get_version_and_alias(None, "v1.0.0", cwd=repo) == ("dev", "")
     with pytest.raises(ValueError, match="not a descendant"):
-        get_version_and_alias(None, "v1.0.0", cwd=repo)
+        get_version_and_alias(None, "v1.0.0", cwd=repo, require_descendant=True)
+
+
+def test_version_missing_tag(repo):
+    with pytest.raises(ValueError, match="git fetch --tags"):
+        get_version_and_alias(None, "v9.9.9", cwd=repo)
+
+
+def test_cli_get_version_missing_tag(repo, monkeypatch):
+    monkeypatch.chdir(repo)
+    result = CliRunner().invoke(cli, ["get-version", "--latest-release-tag", "v9.9.9"])
+    assert result.exit_code == 1
+    assert "Error: Tag 'v9.9.9' was not found" in result.output
+    assert "Traceback" not in result.output
 
 
 def test_version_bad_tag(repo):
@@ -427,3 +442,21 @@ def test_push_rejection_gives_up_after_retries(repo, monkeypatch):
     with pytest.raises(deploy_module.PushRejectedError):
         deploy("1.1", repo=repo, push=True)
     assert git("rev-parse", "gh-pages", cwd=repo) == before
+
+
+def test_cli_get_version_not_descendant_warns(repo, monkeypatch):
+    git("checkout", "-q", "-b", "other", cwd=repo)
+    commit(repo, "b")
+    git("tag", "v1.0.0", cwd=repo)
+    git("checkout", "-q", "main", cwd=repo)
+    commit(repo, "c")
+    monkeypatch.chdir(repo)
+    result = CliRunner().invoke(cli, ["get-version", "--latest-release-tag", "v1.0.0"])
+    assert result.exit_code == 0
+    assert "Warning: The current commit" in result.output
+    assert "version=dev" in result.output
+    strict = CliRunner().invoke(
+        cli, ["get-version", "--latest-release-tag", "v1.0.0", "--require-descendant"]
+    )
+    assert strict.exit_code == 1
+    assert "Error: The current commit" in strict.output

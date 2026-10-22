@@ -11,6 +11,7 @@ import html
 import json
 import re
 import subprocess
+import warnings
 from functools import cache
 from importlib.resources import files
 from pathlib import Path
@@ -82,8 +83,20 @@ def get_latest_release_tag(repo: str | None = None) -> str | None:
 
 
 def get_tag_hash(tag: str, cwd: str | Path | None = None) -> str:
-    """Return the commit hash a tag points to."""
-    return _git("rev-list", "-n", "1", tag, cwd=cwd)
+    """
+    Return the commit hash a tag points to.
+
+    Raises:
+        ValueError: If the tag does not exist in the local repository.
+    """
+    try:
+        tag_hash = _git("rev-list", "-n", "1", tag, cwd=cwd)
+    except subprocess.CalledProcessError as err:
+        raise ValueError(
+            f"Tag '{tag}' was not found in the local git repository. "
+            "Fetch tags with `git fetch --tags`, or use `fetch-depth: 0` with actions/checkout."
+        ) from err
+    return tag_hash
 
 
 def is_ancestor(ancestor: str, descendant: str, cwd: str | Path | None = None) -> bool:
@@ -103,6 +116,7 @@ def get_version_and_alias(
     strict_semver: bool = True,
     repo: str | None = None,
     cwd: str | Path | None = None,
+    require_descendant: bool = False,
 ) -> tuple[str, str]:
     """
     Determine the docs version and alias for the current commit.
@@ -111,8 +125,9 @@ def get_version_and_alias(
 
     - Building the latest release tag at its commit -> ``(major.minor, "latest")``.
     - ``release_tag`` is an older release -> ``(major.minor, "")``.
-    - Otherwise HEAD descends from the latest release (or there are no
-      releases) -> ``("dev", "")``.
+    - Otherwise -> ``("dev", "")``. If HEAD does not descend from the latest
+      release (common with squash or rebase merges), a warning is emitted, or a
+      ValueError is raised when ``require_descendant`` is True.
 
     Args:
         release_tag: Tag of the release being built (release events only).
@@ -120,13 +135,16 @@ def get_version_and_alias(
         strict_semver: Require full semantic versioning in tags.
         repo: ``owner/name`` used for the ``gh`` lookup.
         cwd: Git working directory.
+        require_descendant: Raise instead of warn when HEAD does not descend
+            from the latest release.
 
     Returns:
         Tuple of ``(version, alias)``; alias may be an empty string.
 
     Raises:
-        ValueError: If HEAD does not descend from the latest release, or the
-            release tag is not a valid version.
+        ValueError: If a tag is missing locally, the release tag is not a valid
+            version, or ``require_descendant`` is True and HEAD does not descend
+            from the latest release.
     """
     if latest_release_tag is None:
         latest_release_tag = get_latest_release_tag(repo=repo)
@@ -142,13 +160,17 @@ def get_version_and_alias(
         version, alias = _release_version(release_tag, strict_semver), LATEST_ALIAS
     elif release_tag and release_tag != latest_release_tag:
         version, alias = _release_version(release_tag, strict_semver), ""
-    elif not latest_hash or is_ancestor(latest_hash, current_hash, cwd=cwd):
-        version, alias = DEV_VERSION, ""
     else:
-        raise ValueError(
-            f"The current commit {current_hash[:7]} is not a descendant of the "
-            f"latest release {latest_release_tag} ({latest_hash[:7]})"
-        )
+        if latest_hash and not is_ancestor(latest_hash, current_hash, cwd=cwd):
+            message = (
+                f"The current commit {current_hash[:7]} is not a descendant of the "
+                f"latest release {latest_release_tag} ({latest_hash[:7]}); "
+                "this is expected after squash or rebase merges."
+            )
+            if require_descendant:
+                raise ValueError(message)
+            warnings.warn(f"{message} Deploying as '{DEV_VERSION}'.", UserWarning, stacklevel=2)
+        version, alias = DEV_VERSION, ""
     return version, alias
 
 

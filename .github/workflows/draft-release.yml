@@ -35,3 +35,27 @@ jobs:
           github-token: ${{ github.token }}
           version-filepath: _extensions/version-selector/VERSION
           version-tag: ${{ github.event.inputs.version-tag }}
+      # The action only commits VERSION; mirror it into _extension.yml on the draft
+      # branch and point the draft release at the new commit.
+      - name: Sync extension version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRAFT_BRANCH: release-draft
+        run: |
+          git fetch origin "$DRAFT_BRANCH"
+          git switch "$DRAFT_BRANCH" 2>/dev/null || git switch -c "$DRAFT_BRANCH" "origin/$DRAFT_BRANCH"
+          git reset --hard "origin/$DRAFT_BRANCH"
+          # the script exits 1 after rewriting the file, and on errors
+          if python .github/scripts/sync_extension_version.py; then
+            echo "_extension.yml already matches VERSION"
+            exit 0
+          fi
+          if git diff --quiet -- _extensions/version-selector/_extension.yml; then
+            echo "::error::sync_extension_version.py failed without updating _extension.yml"
+            exit 1
+          fi
+          version="$(tr -d '[:space:]' < _extensions/version-selector/VERSION)"
+          git add _extensions/version-selector/_extension.yml
+          git commit -m "chore: 🤖 sync _extension.yml version to ${version}"
+          git push origin "$DRAFT_BRANCH"
+          gh release edit "v${version}" --target "$(git rev-parse HEAD)" --repo "$GITHUB_REPOSITORY"
