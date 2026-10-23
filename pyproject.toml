@@ -40,23 +40,15 @@ platforms = ["osx-arm64", "linux-64"]
 [tool.pixi.dependencies]
 python = ">=3.10"
 quarto = ">=1.9,<2"
-
-[tool.pixi.pypi-dependencies]
-quarto-version-selector = { path = ".", editable = true }
-
-[tool.pixi.environments]
-default = { solve-group = "default" }
-dev = { features = ["dev"], solve-group = "default" }
-
-[tool.pixi.feature.dev.dependencies]
 nodejs = ">=24"
 pre-commit = "*"
 
+[tool.pixi.pypi-dependencies]
+quarto-version-selector = { path = ".", editable = true, extras = ["dev"] }
+
 [tool.pixi.tasks]
 render = "quarto render"
-preview = "quarto preview"
-
-[tool.pixi.feature.dev.tasks]
+serve = "quarto render && quarto-version-selector serve --site-dir _site"
 lint = "ruff check ."
 format = "ruff format ."
 test-py = "pytest"

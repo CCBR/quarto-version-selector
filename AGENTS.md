@@ -10,6 +10,11 @@ The Quarto Extension should adhere to current guidelines.
 - Docs: https://quarto.org/docs/extensions/creating.html
 - Example extensions: https://github.com/quarto-ext/
 
+## Documentation
+
+Documentation files are in either Quarto (`.qmd`) or Markdown (`.md`) format.
+The README.md is generated from README.qmd; only make edits in README.qmd, then render it with `pixi run render README.qmd`.
+
 ## Python code
 
 - Python scripts must include module and function/class docstrings.
@@ -34,7 +39,8 @@ The Quarto Extension should adhere to current guidelines.
 - Before staging, review `git status` and `git diff` to confirm the change set is small enough to describe in one sentence; if not, it likely needs to be split.
 - Do not blanket-stage with `git add .` or `git add -A`; stage files or hunks individually (`git add <file>`, `git add -p`) so unrelated changes are not swept into the same commit.
 - When splitting into multiple commits, order them so each commit leaves the repository in a working state (e.g., dependencies/config before the code that uses them).
-- Do not mix mechanical changes (formatting, renames, regenerated files) with substantive logic changes in the same commit.
+- Do not mix mechanical changes (formatting, renames) with substantive logic changes in the same commit.
+- Commit generated files together with the sources they are generated from: e.g. `README.md` belongs in the same commit as the `README.qmd` or `_usage.qmd` change that produced it.
 - Subject format must be: `<type>(optional-scope): short imperative summary` (<=72 chars), e.g., `fix(profile): update release table parser`.
 - Add a body only when needed to explain **why** and notable impact; never include secrets, tokens, PHI, or large diffs.
 - For commits containing any AI-generated code, commit messages, or any other AI-generated content,

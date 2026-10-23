@@ -1,32 +1,34 @@
+
+
+<!-- README.md is generated from README.qmd; edit README.qmd and _usage.qmd, then run `quarto render README.qmd`. -->
+
 # quarto-version-selector
 
-A version selector dropdown for [Quarto](https://quarto.org/) websites.
+A version dropdown for [Quarto](https://quarto.org/) websites.
 
 Inspired by the [mike](https://github.com/jimporter/mike) plugin for mkdocs.
 
 ## How it works
 
-```
-gh-pages/
-├── index.html        # redirects to the default version (e.g. latest/)
-├── versions.json     # [{"version": "1.2", "title": "1.2", "aliases": ["latest"]}, ...]
-├── dev/              # built from the main branch
-├── 1.2/              # built from release v1.2.x
-├── 1.1/
-└── latest/           # copy of the newest release
-```
+    gh-pages/
+    ├── index.html        # redirects to the default version (e.g. latest/)
+    ├── versions.json     # [{"version": "1.2", "title": "1.2", "aliases": ["latest"]}, ...]
+    ├── dev/              # built from the main branch
+    ├── 1.2/              # built from release v1.2.x
+    ├── 1.1/
+    └── latest/           # copy of the newest release
 
-The extension's JavaScript reads `versions.json` from the parent of the current version directory and renders a dropdown. Choosing a version opens the same page in that version, or the version's home page if the page doesn't exist there. When `versions.json` is missing (e.g. `quarto preview`), no selector is shown.
+The extension’s JavaScript reads `versions.json` from the parent of the current version directory and renders a dropdown. Choosing a version opens the same page in that version, or the version’s home page if the page doesn’t exist there. When `versions.json` is missing (e.g. `quarto preview`), no selector is shown.
 
 ## Install the extension
 
-```bash
+``` bash
 quarto add CCBR/quarto-version-selector
 ```
 
 Enable the filter in `_quarto.yml`:
 
-```yaml
+``` yaml
 filters:
   - version-selector
 
@@ -36,20 +38,20 @@ format:
 
 ### Options
 
-```yaml
+``` yaml
 version-selector:
   versions-file: versions.json   # relative to the root of the docs branch
-  placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | none
+  placement: auto                # auto | navbar | navbar-right | fixed | none
 ```
 
-- `navbar-left` (default): the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, it is pinned to the top-left of the page.
-- `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle). With no navbar, it is pinned to the top-right of the page.
-- `fixed-left` / `fixed-right`: pinned to the top-left / top-right corner of the page.
+- `auto` / `navbar`: the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, `auto` pins it to the top-right of the page.
+- `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).
+- `fixed`: pinned to the top-right corner of the page.
 - `none`: only shown in a `#version-selector` element (see below).
 
 To place the selector somewhere specific, add an empty div with id `version-selector`:
 
-```markdown
+``` markdown
 ::: {#version-selector}
 :::
 ```
@@ -60,7 +62,7 @@ The widget uses Bootstrap CSS variables, so it follows your `theme:` and dark mo
 Override these custom properties in your own CSS/SCSS:
 
 | Property | Default |
-|---|---|
+|----|----|
 | `--version-selector-fg` | `var(--bs-navbar-color)` |
 | `--version-selector-fg-hover` | `var(--bs-navbar-hover-color)` |
 | `--version-selector-bg` | `transparent` |
@@ -71,7 +73,7 @@ Override these custom properties in your own CSS/SCSS:
 | `--version-selector-alias-fg` | `var(--bs-secondary-color)` |
 | `--version-selector-font-size` | `0.875rem` |
 
-```css
+``` css
 .quarto-version-selector { --version-selector-border: transparent; }
 ```
 
@@ -80,7 +82,8 @@ Override these custom properties in your own CSS/SCSS:
 Use the custom `deploy-version` action:
 
 `.github/workflows/docs-quarto.yml`
-```yaml
+
+``` yaml
 name: quarto-publish-versioned
 on:
   workflow_dispatch:
@@ -108,12 +111,12 @@ jobs:
           # path: docs # if the Quarto project is in a subfolder
 ```
 
-- **Release** of the newest version (e.g. `v1.2.0`) deploys `1.2/`, aliases it as `latest`, and points the root at `latest/`.
+- **Release** of the newest version (e.g. `v1.2.0`) deploys `1.2/`, aliases it as `latest`, and points the root at `latest/`.
 - **Release** of an older version deploys `1.1/` with no alias.
 - **Push to main** deploys `dev/`.
 - If the commit does not descend from the latest release (common with squash or rebase merges), the action warns and still deploys `dev/`. Set `require-descendant: true` to fail instead.
 
-Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch). Pushes made with `GITHUB_TOKEN` don't trigger a Pages build on their own, so the action requests one after deploying (this needs `pages: write`).
+Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch). Pushes made with `GITHUB_TOKEN` don’t trigger a Pages build on their own, so the action requests one after deploying (this needs `pages: write`).
 
 ### Inputs
 
@@ -124,8 +127,8 @@ Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.gith
 - `github-actor`: username for the deploy commit. Default: `41898282+github-actions[bot]`.
 - `strict-semver`: require strict semantic versioning in release tags. Default: `true`.
 - `dry-run`: print the deploy command without deploying. Default: `false`.
-- `path`: Quarto project directory, relative to the repo root (e.g. `docs`). Default: `.`.
-- `site-dir`: rendered site directory relative to `path`; must match the project's `output-dir`. Default: `_site`.
+- `path`: Quarto project directory, relative to the repo root (e.g. `docs`). Default: `.`.
+- `site-dir`: rendered site directory relative to `path`; must match the project’s `output-dir`. Default: `_site`.
 - `require-descendant`: fail instead of warn when the commit does not descend from the latest release. Default: `false`.
 
 ### Outputs
@@ -135,15 +138,15 @@ Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.gith
 
 ## Migrating from mkdocs + mike
 
-The docs branch layout and `versions.json` format match mike's, so you can switch an existing mike site to Quarto without touching the versions mike already deployed. Their pages keep mike's version selector, which also lists new Quarto versions. See the step-by-step guide: [Migrating from mkdocs + mike](mike.qmd).
+The docs branch layout and `versions.json` format match mike’s, so you can switch an existing mike site to Quarto without touching the versions mike already deployed. Their pages keep mike’s version selector, which also lists new Quarto versions. See the step-by-step guide: [Migrating from mkdocs + mike](mike.qmd).
 
 ## CLI
 
-```bash
+``` bash
 pip install git+https://github.com/CCBR/quarto-version-selector.git
 ```
 
-```bash
+``` bash
 quarto render
 # compute version/alias for the current commit (uses `gh` to find the latest release)
 quarto-version-selector get-version --release-tag v1.2.0
@@ -157,7 +160,7 @@ quarto-version-selector set-default latest --push
 quarto-version-selector validate
 ```
 
-`versions.json` must match [versions.schema.json](src/quarto_version_selector/versions.schema.json), and every version and alias name must be unique. `deploy`, `alias`, and `set-default` validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed `versions.json` stops the deploy instead of being overwritten. Names must be single directory names (no `/`, `..`, or reserved root files such as `index.html`), and `set-default` targets must be listed in `versions.json`.
+`versions.json` must match [versions.schema.json](https://github.com/CCBR/quarto-version-selector/blob/main/src/quarto_version_selector/versions.schema.json), and every version and alias name must be unique. `deploy`, `alias`, and `set-default` validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed `versions.json` stops the deploy instead of being overwritten. Names must be single directory names (no `/`, `..`, or reserved root files such as `index.html`), and `set-default` targets must be listed in `versions.json`.
 
 Redeploying a version also refreshes all of its aliases. Deploys without `--push` stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.
 
@@ -165,12 +168,12 @@ Redeploying a version also refreshes all of its aliases. Deploys without `--push
 
 `serve` previews the whole versioned site, including the version selector, without deploying:
 
-```bash
+``` bash
 quarto render                                       # or: quarto render docs
 quarto-version-selector serve --site-dir _site      # or: --site-dir docs/_site
 ```
 
-It copies the docs branch into a temporary directory, adds your rendered site as `dev` (change it with `--version`), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without `--site-dir`, it serves the docs branch as is, including deploys you haven't pushed yet. Re-run it after `quarto render` to pick up changes.
+It copies the docs branch into a temporary directory, adds your rendered site as `dev` (change it with `--version`), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without `--site-dir`, it serves the docs branch as is, including deploys you haven’t pushed yet. Re-run it after `quarto render` to pick up changes.
 
 The site has to be served over HTTP. Opening the files directly (`file://`) does not work: browsers block the `fetch()` of `versions.json`, so no selector appears, and links to version folders such as `../1.2/` show a directory listing instead of `index.html`.
 
@@ -180,15 +183,15 @@ Run `quarto-version-selector <command> --help` for all options. Deploys use a te
 
 With [Pixi](https://pixi.sh/latest/installation/):
 
-```bash
+``` bash
 pixi run render            # quarto render the demo site
-pixi run -e dev test       # ruff + pytest + JS tests
-pixi run -e dev pre-commit # all pre-commit hooks
+pixi run test              # ruff + pytest + JS tests
+pixi run pre-commit        # all pre-commit hooks
 ```
 
 Or manually:
 
-```bash
+``` bash
 pip install -e ".[dev]"
 ruff check .
 pytest          # CLI + extension render tests (extension tests need quarto)
@@ -208,4 +211,4 @@ Want to **contribute** to this project? Check out the
 [contributing guidelines](.github/CONTRIBUTING.md).
 
 **General Inquiries and Collaboration:** Please contact the CCBR Pipeliner team
-at [CCBR_Pipeliner@mail.nih.gov](mailto:CCBR_Pipeliner@mail.nih.gov).
+at <CCBR_Pipeliner@mail.nih.gov>.

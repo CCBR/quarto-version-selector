@@ -96,11 +96,12 @@ Custom CSS, JavaScript, and theme overrides (`extra_css`, `extra_javascript`, `c
 ## 5. Render and preview
 
 ```bash
-quarto render docs        # fix every warning, e.g. unresolved links
-quarto preview docs       # live preview of the new site
+
+quarto render docs                                    # fix every warning, e.g. unresolved links
+quarto-version-selector serve --site-dir docs/_site   # preview at http://localhost:8000/dev/
 ```
 
-The version selector only appears once the site is served next to `versions.json`, so `quarto preview` doesn't show it.
+`serve` copies the `gh-pages` branch (including the old mike versions) into a temporary directory, adds the rendered site as `dev`, and serves it with a working version selector. Nothing in the repository changes. Re-run it after each `quarto render`. Plain `quarto preview docs` also works for live editing, but it doesn't show the version selector because there is no `versions.json` next to the site.
 
 ## 6. Remove mkdocs
 

@@ -11,4 +11,4 @@ This is the first release of quarto-version-selector 🎉
 - `_extension.yml` now includes a `version` field, kept in sync with the `VERSION` file by a pre-commit hook. (#6, @kelly-sovacool)
 - New `serve` command previews the versioned site locally, with a working version selector, by serving a temporary copy of the docs branch with your rendered site added as `dev`. (#9, @kelly-sovacool)
 - The selector now defaults to the start of the left navbar menu; use `placement: navbar-right` for the previous position next to the navbar tools. `placement` options are now `navbar-left` (default), `navbar-right`, `fixed-left`, `fixed-right`, and `none`. (#8, @kelly-sovacool)
-- New guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (@kelly-sovacool)
+- New guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, @kelly-sovacool)
