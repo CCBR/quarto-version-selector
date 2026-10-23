@@ -8,16 +8,18 @@ project:
 website:
   title: "quarto-version-selector"
   navbar:
-    left:
+    tools:
+      - icon: github
+        href: https://github.com/CCBR/quarto-version-selector
+  sidebar:
+    style: docked
+    contents:
       - href: index.qmd
         text: Home
       - href: template.qmd
         text: Example
       - href: mike.qmd
         text: Migrating from mike
-    tools:
-      - icon: github
-        href: https://github.com/CCBR/quarto-version-selector
 
 filters:
   - version-selector
