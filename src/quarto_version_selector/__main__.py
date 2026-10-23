@@ -8,12 +8,15 @@ Example usage::
     quarto-version-selector deploy --version 1.2 --alias latest --push
     quarto-version-selector alias 1.2 stable --push
     quarto-version-selector set-default latest --push
+    quarto-version-selector serve --site-dir _site
 """
 
 from __future__ import annotations
 
 import os
+import signal
 import warnings
+import webbrowser
 from pathlib import Path
 
 import click
@@ -22,6 +25,7 @@ from . import __version__
 from .deploy import VERSIONS_FILE, docs_worktree, set_default_version
 from .deploy import alias as alias_version
 from .deploy import deploy as deploy_version
+from .preview import make_server, preview_site
 from .versions import get_version_and_alias, read_versions
 
 _branch = click.option("--branch", default="gh-pages", show_default=True, help="Docs branch.")
@@ -146,6 +150,67 @@ def set_default(target: str, branch: str, remote: str, push: bool) -> None:
     """Redirect the site root to TARGET (a version or alias)."""
     set_default_version(target, branch=branch, remote=remote, push=push)
     click.echo(f"Default version set to {target}")
+
+
+@cli.command()
+@click.option(
+    "--site-dir",
+    default=None,
+    help="Rendered site to preview as --version (e.g. _site or docs/_site). Omit to preview the docs branch as is.",
+)
+@click.option("--version", "version", default="dev", show_default=True, help="Version name for --site-dir.")
+@click.option("--alias", "aliases", multiple=True, help="Alias for --version (repeatable).")
+@click.option(
+    "--ref", default=None, help="Git ref to preview instead of the newest local/remote docs branch."
+)
+@_branch
+@_remote
+@click.option("--host", default="127.0.0.1", show_default=True, help="Interface to bind.")
+@click.option("--port", default=8000, show_default=True, type=int, help="Port to bind (0 picks a free port).")
+@click.option("--open/--no-open", "open_browser", default=True, show_default=True, help="Open the browser.")
+def serve(
+    site_dir: str | None,
+    version: str,
+    aliases: tuple[str, ...],
+    ref: str | None,
+    branch: str,
+    remote: str,
+    host: str,
+    port: int,
+    open_browser: bool,
+) -> None:
+    """
+    Preview the versioned site locally, with a working version selector.
+
+    Copies the docs branch into a temporary directory, adds SITE_DIR as
+    VERSION, and serves it over HTTP. Nothing in the repository is changed.
+    Re-run after `quarto render` to pick up changes.
+    """
+    try:
+        with preview_site(
+            site_dir=site_dir, version=version, aliases=list(aliases), branch=branch, remote=remote, ref=ref
+        ) as root:
+            try:
+                server = make_server(root, host=host, port=port)
+            except OSError as err:
+                raise click.ClickException(
+                    f"Could not listen on {host}:{port}: {err.strerror}; try --port"
+                ) from err
+            bound_port = server.server_address[1]
+            start = f"{version}/" if site_dir else ""
+            url = f"http://{'localhost' if host in ('127.0.0.1', 'localhost') else host}:{bound_port}/{start}"
+            click.echo(f"Serving {root}\nPreview: {url}\nPress Ctrl+C to stop.")
+            if open_browser:
+                webbrowser.open(url)
+            # Stop cleanly (removing the temporary copy) on SIGTERM as well as Ctrl+C.
+            signal.signal(signal.SIGTERM, signal.default_int_handler)
+            with server:
+                try:
+                    server.serve_forever()
+                except KeyboardInterrupt:
+                    click.echo("\nStopped.")
+    except (FileNotFoundError, RuntimeError, ValueError) as err:
+        raise click.ClickException(str(err)) from err
 
 
 @cli.command()
