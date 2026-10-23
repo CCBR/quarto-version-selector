@@ -1,6 +1,6 @@
 # quarto-version-selector
 
-A version dropdown for [Quarto](https://quarto.org/) websites.
+A version selector dropdown for [Quarto](https://quarto.org/) websites.
 
 Inspired by the [mike](https://github.com/jimporter/mike) plugin for mkdocs.
 
