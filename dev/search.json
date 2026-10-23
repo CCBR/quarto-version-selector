@@ -1,5 +1,117 @@
 [
   {
+    "objectID": "mike.html",
+    "href": "mike.html",
+    "title": "Migrating from mkdocs + mike",
+    "section": "",
+    "text": "These steps switch a docs site from mkdocs with mike to Quarto with this extension. Versions that mike already deployed stay exactly as they are; only new deploys are built with Quarto.\nThis works because both tools use the same layout on the docs branch:\nSo the new Quarto selector lists the old versions, and the old pages keep mike’s own selector (Material’s version menu, or mike’s version-select.js dropdown for other themes). That selector reads the same versions.json, so it also lists the new Quarto versions. Choosing a version from an old page opens that version’s home page.\nThe steps assume the docs live in docs/ with mkdocs.yml at the repository root and the docs branch is gh-pages. A complete example is CCBR/CHAMPAGNE#394."
+  },
+  {
+    "objectID": "mike.html#check-the-existing-versions.json",
+    "href": "mike.html#check-the-existing-versions.json",
+    "title": "Migrating from mkdocs + mike",
+    "section": "1. Check the existing versions.json",
+    "text": "1. Check the existing versions.json\npip install git+https://github.com/CCBR/quarto-version-selector.git\nquarto-version-selector validate\nvalidate checks versions.json on origin/gh-pages without changing anything. deploy refuses to overwrite a file that doesn’t validate, so fix any errors before the first deploy. mike sometimes adds a properties field (e.g. {\"hidden\": true}), which isn’t part of this format; remove it from versions.json on the docs branch."
+  },
+  {
+    "objectID": "mike.html#install-the-extensions",
+    "href": "mike.html#install-the-extensions",
+    "title": "Migrating from mkdocs + mike",
+    "section": "2. Install the extensions",
+    "text": "2. Install the extensions\nFrom a new branch, install the extension (and a theme, if you use one, e.g. quarto-fnl) into the docs folder:\ngit switch -c quarto\ncd docs\nquarto add CCBR/quarto-version-selector --no-prompt\nquarto add CCBR/quarto-fnl --no-prompt   # optional theme\ncd .."
+  },
+  {
+    "objectID": "mike.html#write-docs_quarto.yml",
+    "href": "mike.html#write-docs_quarto.yml",
+    "title": "Migrating from mkdocs + mike",
+    "section": "3. Write docs/_quarto.yml",
+    "text": "3. Write docs/_quarto.yml\nTranslate mkdocs.yml into a Quarto website. The nav: section becomes the sidebar; site_name, repo_url, and extra.social become website fields and navbar links. Keep the .md pages as they are; Quarto renders Markdown files directly.\nproject:\n  type: website\n  output-dir: _site\n\nwebsite:\n  title: \"My Pipeline\"\n  site-url: https://ccbr.github.io/my-pipeline\n  repo-url: https://github.com/CCBR/my-pipeline\n  repo-subdir: docs\n  repo-actions: [edit, issue]\n  navbar:\n    left:\n      - href: index.md\n        text: Home\n  sidebar:\n    style: docked\n    contents:            # from the mkdocs `nav:`\n      - href: index.md\n        text: Home\n      - section: User Guide\n        contents:\n          - href: guide/usage.md\n            text: Usage\n\nfilters:\n  - version-selector\n\nformat:\n  html:                  # or fnl-html with quarto-fnl\n    toc: true\n    code-copy: true"
+  },
+  {
+    "objectID": "mike.html#convert-mkdocs-only-markdown",
+    "href": "mike.html#convert-mkdocs-only-markdown",
+    "title": "Migrating from mkdocs + mike",
+    "section": "4. Convert mkdocs-only Markdown",
+    "text": "4. Convert mkdocs-only Markdown\nFind the syntax Quarto doesn’t understand:\ngrep -rn -E -- '--8&lt;--|^ *(!!!|\\?\\?\\?) |^=== |\\]\\(/' docs --include='*.md'\n\n\n\n\n\n\n\nmkdocs\nQuarto\n\n\n\n\n--8&lt;-- \"README.md\" (paths relative to the repo root)\n{{&lt; include ../README.md &gt;}} (paths relative to the page)\n\n\n!!! note \"Title\" admonitions\n::: {.callout-note title=\"Title\"} … :::\n\n\n??? note collapsible admonitions\n::: {.callout-note collapse=\"true\"}\n\n\n=== \"Tab\" content tabs\n::: {.panel-tabset} with ## Tab headings\n\n\nroot-relative links such as ](/page.md)\npage-relative links such as ](../page.md)\n\n\n\nIf the README is included in the site, change its relative links to repository files outside docs/ (e.g. .github/CONTRIBUTING.md) into absolute GitHub URLs, because they don’t resolve inside the site.\nCustom CSS, JavaScript, and theme overrides (extra_css, extra_javascript, custom_dir) usually aren’t needed: Quarto has code-copy buttons, search, and Google Analytics (website: google-analytics:) built in."
+  },
+  {
+    "objectID": "mike.html#render-and-preview",
+    "href": "mike.html#render-and-preview",
+    "title": "Migrating from mkdocs + mike",
+    "section": "5. Render and preview",
+    "text": "5. Render and preview\nquarto render docs                                    # fix every warning, e.g. unresolved links\nquarto-version-selector serve --site-dir docs/_site   # preview at http://localhost:8000/dev/\nserve copies the gh-pages branch (including the old mike versions) into a temporary directory, adds the rendered site as dev, and serves it with a working version selector. Nothing in the repository changes. Re-run it after each quarto render. Plain quarto preview docs also works for live editing, but it doesn’t show the version selector because there is no versions.json next to the site."
+  },
+  {
+    "objectID": "mike.html#remove-mkdocs",
+    "href": "mike.html#remove-mkdocs",
+    "title": "Migrating from mkdocs + mike",
+    "section": "6. Remove mkdocs",
+    "text": "6. Remove mkdocs\ngit rm -r mkdocs.yml docs/requirements.txt docs/overrides docs/css docs/js \\\n  .github/workflows/docs-mkdocs.yml\necho \"/docs/_site/\" &gt;&gt; .gitignore\nprintf '/.quarto/\\n/_site/\\n' &gt;&gt; docs/.gitignore\nAdjust the paths to what the repository has. If it uses pre-commit, add ^docs/_extensions/ to the top-level exclude: so formatters don’t rewrite the installed extensions."
+  },
+  {
+    "objectID": "mike.html#deploy-with-github-actions",
+    "href": "mike.html#deploy-with-github-actions",
+    "title": "Migrating from mkdocs + mike",
+    "section": "7. Deploy with GitHub Actions",
+    "text": "7. Deploy with GitHub Actions\nAdd .github/workflows/docs-quarto.yml:\nname: docs\non:\n  workflow_dispatch:\n  release:\n    types: [published]\n  push:\n    branches: [main]\n    paths:\n      - \"docs/**\"\n      - \"**.md\"\n      - .github/workflows/docs-quarto.yml\nconcurrency:\n  group: docs-deploy\n  cancel-in-progress: false\npermissions:\n  contents: write\n  pages: write\njobs:\n  deploy-docs:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          fetch-depth: 0\n      - uses: quarto-dev/quarto-actions/setup@v2\n      - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main\n        with:\n          github-token: ${{ secrets.GITHUB_TOKEN }}\n          path: docs\nIt deploys like mike did: a push to main deploys dev/, and a release deploys major.minor/ and moves latest to the newest release. A latest symlink created by mike is replaced by a copy of the release. If the repository uses squash or rebase merges, release tags may not be ancestors of main; the action warns and still deploys dev/."
+  },
+  {
+    "objectID": "mike.html#update-links-and-open-a-pr",
+    "href": "mike.html#update-links-and-open-a-pr",
+    "title": "Migrating from mkdocs + mike",
+    "section": "8. Update links and open a PR",
+    "text": "8. Update links and open a PR\n\nPoint the README docs badge at the new workflow (docs-mkdocs.yml → docs-quarto.yml).\nQuarto pages end in .html: links to https://&lt;site&gt;/latest/guide/usage/ become .../latest/guide/usage.html. Links into old versions keep mike’s directory style and keep working.\nMention how to preview the docs in the contributing guide.\n\nAfter merging, the push to main deploys dev/ with Quarto, and the next release deploys its version and moves latest. Check that GitHub Pages publishes from the gh-pages branch (Settings → Pages → Deploy from a branch)."
+  },
+  {
+    "objectID": "mike.html#rolling-back",
+    "href": "mike.html#rolling-back",
+    "title": "Migrating from mkdocs + mike",
+    "section": "Rolling back",
+    "text": "Rolling back\nNothing on gh-pages is deleted. To undo a Quarto deploy, revert its commit on the docs branch: each deploy is a single commit named docs: deploy &lt;version&gt;."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "quarto-version-selector",
+    "section": "",
+    "text": "A version dropdown for Quarto websites. The selector appears in the navbar once the site is deployed with quarto-version-selector deploy, which writes a versions.json file to the root of the docs branch.\nInspired by the mike plugin for mkdocs."
+  },
+  {
+    "objectID": "index.html#how-it-works",
+    "href": "index.html#how-it-works",
+    "title": "quarto-version-selector",
+    "section": "How it works",
+    "text": "How it works\ngh-pages/\n├── index.html        # redirects to the default version (e.g. latest/)\n├── versions.json     # [{\"version\": \"1.2\", \"title\": \"1.2\", \"aliases\": [\"latest\"]}, ...]\n├── dev/              # built from the main branch\n├── 1.2/              # built from release v1.2.x\n├── 1.1/\n└── latest/           # copy of the newest release\nThe extension’s JavaScript reads versions.json from the parent of the current version directory and renders a dropdown. Choosing a version opens the same page in that version, or the version’s home page if the page doesn’t exist there. When versions.json is missing (e.g. quarto preview), no selector is shown."
+  },
+  {
+    "objectID": "index.html#install-the-extension",
+    "href": "index.html#install-the-extension",
+    "title": "quarto-version-selector",
+    "section": "Install the extension",
+    "text": "Install the extension\nquarto add CCBR/quarto-version-selector\nEnable the filter in _quarto.yml:\nfilters:\n  - version-selector\n\nformat:\n  html: default     # or e.g. fnl-html\n\nOptions\nversion-selector:\n  versions-file: versions.json   # relative to the root of the docs branch\n  placement: auto                # auto | navbar | navbar-right | fixed | none\n\nauto / navbar: the start of the left navbar menu (before the navbar: left: links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, auto pins it to the top-right of the page.\nnavbar-right: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).\nfixed: pinned to the top-right corner of the page.\nnone: only shown in a #version-selector element (see below).\n\nTo place the selector somewhere specific, add an empty div with id version-selector:\n::: {#version-selector}\n:::\n\n\nStyling\nThe widget uses Bootstrap CSS variables, so it follows your theme: and dark mode. Override these custom properties in your own CSS/SCSS:\n\n\n\n\n\n\n\nProperty\nDefault\n\n\n\n\n--version-selector-fg\nvar(--bs-navbar-color)\n\n\n--version-selector-fg-hover\nvar(--bs-navbar-hover-color)\n\n\n--version-selector-bg\ntransparent\n\n\n--version-selector-border\nvar(--bs-border-color)\n\n\n--version-selector-menu-bg\nvar(--bs-dropdown-bg), else the page background (Canvas)\n\n\n--version-selector-menu-fg\nvar(--bs-dropdown-color), else the page text color (CanvasText)\n\n\n--version-selector-alias-bg\nvar(--bs-secondary-bg)\n\n\n--version-selector-alias-fg\nvar(--bs-secondary-color)\n\n\n--version-selector-font-size\n0.875rem\n\n\n\n.quarto-version-selector { --version-selector-border: transparent; }"
+  },
+  {
+    "objectID": "index.html#deploy-with-github-actions",
+    "href": "index.html#deploy-with-github-actions",
+    "title": "quarto-version-selector",
+    "section": "Deploy with GitHub Actions",
+    "text": "Deploy with GitHub Actions\nUse the custom deploy-version action:\n.github/workflows/docs-quarto.yml\nname: quarto-publish-versioned\non:\n  workflow_dispatch:\n  release:\n    types: [published]\n  push:\n    branches: [main]\nconcurrency: # one deploy at a time; the CLI also retries rejected pushes\n  group: docs-deploy\n  cancel-in-progress: false\npermissions:\n  contents: write # push to gh-pages\n  pages: write # request a Pages build after the push\njobs:\n  deploy-docs:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          fetch-depth: 0 # tags and history are needed to determine the docs version\n      - uses: quarto-dev/quarto-actions/setup@v2\n      - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main\n        with:\n          github-token: ${{ secrets.GITHUB_TOKEN }}\n          # path: docs # if the Quarto project is in a subfolder\n\nRelease of the newest version (e.g. v1.2.0) deploys 1.2/, aliases it as latest, and points the root at latest/.\nRelease of an older version deploys 1.1/ with no alias.\nPush to main deploys dev/.\nIf the commit does not descend from the latest release (common with squash or rebase merges), the action warns and still deploys dev/. Set require-descendant: true to fail instead.\n\nConfigure GitHub Pages to publish from the gh-pages branch. Pushes made with GITHUB_TOKEN don’t trigger a Pages build on their own, so the action requests one after deploying (this needs pages: write).\n\nInputs\n\ngithub-token: GitHub Actions token. Required.\nversion-selector-version: git ref of this repo to install. Default: main.\npython-version: Python version to install. Default: 3.14.\ndocs-branch: branch to deploy the docs to. Default: gh-pages.\ngithub-actor: username for the deploy commit. Default: 41898282+github-actions[bot].\nstrict-semver: require strict semantic versioning in release tags. Default: true.\ndry-run: print the deploy command without deploying. Default: false.\npath: Quarto project directory, relative to the repo root (e.g. docs). Default: ..\nsite-dir: rendered site directory relative to path; must match the project’s output-dir. Default: _site.\nrequire-descendant: fail instead of warn when the commit does not descend from the latest release. Default: false.\n\n\n\nOutputs\n\nversion: the version deployed.\nalias: the alias deployed (empty if none)."
+  },
+  {
+    "objectID": "index.html#migrating-from-mkdocs-mike",
+    "href": "index.html#migrating-from-mkdocs-mike",
+    "title": "quarto-version-selector",
+    "section": "Migrating from mkdocs + mike",
+    "text": "Migrating from mkdocs + mike\nThe docs branch layout and versions.json format match mike’s, so you can switch an existing mike site to Quarto without touching the versions mike already deployed. Their pages keep mike’s version selector, which also lists new Quarto versions. See the step-by-step guide: Migrating from mkdocs + mike."
+  },
+  {
+    "objectID": "index.html#cli",
+    "href": "index.html#cli",
+    "title": "quarto-version-selector",
+    "section": "CLI",
+    "text": "CLI\npip install git+https://github.com/CCBR/quarto-version-selector.git\nquarto render\n# compute version/alias for the current commit (uses `gh` to find the latest release)\nquarto-version-selector get-version --release-tag v1.2.0\n# deploy _site to gh-pages/1.2 and gh-pages/latest, update versions.json, push\nquarto-version-selector deploy --version 1.2 --alias latest --set-default latest --push\n# add an alias to an existing version\nquarto-version-selector alias 1.2 stable --push\n# change where the site root redirects\nquarto-version-selector set-default latest --push\n# check versions.json on the docs branch (or pass a file path)\nquarto-version-selector validate\nversions.json must match versions.schema.json, and every version and alias name must be unique. deploy, alias, and set-default validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed versions.json stops the deploy instead of being overwritten. Names must be single directory names (no /, .., or reserved root files such as index.html), and set-default targets must be listed in versions.json.\nRedeploying a version also refreshes all of its aliases. Deploys without --push stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.\n\nPreview locally\nserve previews the whole versioned site, including the version selector, without deploying:\nquarto render                                       # or: quarto render docs\nquarto-version-selector serve --site-dir _site      # or: --site-dir docs/_site\nIt copies the docs branch into a temporary directory, adds your rendered site as dev (change it with --version), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without --site-dir, it serves the docs branch as is, including deploys you haven’t pushed yet. Re-run it after quarto render to pick up changes.\nThe site has to be served over HTTP. Opening the files directly (file://) does not work: browsers block the fetch() of versions.json, so no selector appears, and links to version folders such as ../1.2/ show a directory listing instead of index.html.\nRun quarto-version-selector &lt;command&gt; --help for all options. Deploys use a temporary git worktree, so your working tree is not touched."
+  },
+  {
     "objectID": "template.html",
     "href": "template.html",
     "title": "Version Selector Example",
@@ -12,12 +124,5 @@
     "title": "Version Selector Example",
     "section": "",
     "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "quarto-version-selector",
-    "section": "",
-    "text": "A for Quarto websites. The selector appears in the navbar once the site is deployed with quarto-version-selector deploy, which writes a versions.json file to the root of the docs branch.\nSee the README for usage."
   }
 ]

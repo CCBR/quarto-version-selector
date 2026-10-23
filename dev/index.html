@@ -26,6 +26,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -271,6 +306,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link" href="./template.html"> 
 <span class="menu-text">Example</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./mike.html"> 
+<span class="menu-text">Migrating from mike</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -308,10 +347,190 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>A for Quarto websites. The selector appears in the navbar once the site is deployed with <code>quarto-version-selector deploy</code>, which writes a <code>versions.json</code> file to the root of the docs branch.</p>
-<p>See the <a href="https://github.com/CCBR/quarto-version-selector#readme">README</a> for usage.</p>
+<p>A version dropdown for Quarto websites. The selector appears in the navbar once the site is deployed with <code>quarto-version-selector deploy</code>, which writes a <code>versions.json</code> file to the root of the docs branch.</p>
+<p>Inspired by the <a href="https://github.com/jimporter/mike">mike</a> plugin for mkdocs.</p>
+<section id="how-it-works" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-works">How it works</h2>
+<pre><code>gh-pages/
+├── index.html        # redirects to the default version (e.g. latest/)
+├── versions.json     # [{"version": "1.2", "title": "1.2", "aliases": ["latest"]}, ...]
+├── dev/              # built from the main branch
+├── 1.2/              # built from release v1.2.x
+├── 1.1/
+└── latest/           # copy of the newest release</code></pre>
+<p>The extension’s JavaScript reads <code>versions.json</code> from the parent of the current version directory and renders a dropdown. Choosing a version opens the same page in that version, or the version’s home page if the page doesn’t exist there. When <code>versions.json</code> is missing (e.g.&nbsp;<code>quarto preview</code>), no selector is shown.</p>
+</section>
+<section id="install-the-extension" class="level2">
+<h2 class="anchored" data-anchor-id="install-the-extension">Install the extension</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> add CCBR/quarto-version-selector</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable the filter in <code>_quarto.yml</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">filters</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> version-selector</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">format</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">html</span><span class="kw">:</span><span class="at"> default</span><span class="co">     # or e.g. fnl-html</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="options" class="level3">
+<h3 class="anchored" data-anchor-id="options">Options</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version-selector</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">versions-file</span><span class="kw">:</span><span class="at"> versions.json</span><span class="co">   # relative to the root of the docs branch</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">placement</span><span class="kw">:</span><span class="at"> auto</span><span class="co">                # auto | navbar | navbar-right | fixed | none</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>auto</code> / <code>navbar</code>: the start of the left navbar menu (before the <code>navbar: left:</code> links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, <code>auto</code> pins it to the top-right of the page.</li>
+<li><code>navbar-right</code>: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).</li>
+<li><code>fixed</code>: pinned to the top-right corner of the page.</li>
+<li><code>none</code>: only shown in a <code>#version-selector</code> element (see below).</li>
+</ul>
+<p>To place the selector somewhere specific, add an empty div with id <code>version-selector</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>::: {#version-selector}</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>:::</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="styling" class="level3">
+<h3 class="anchored" data-anchor-id="styling">Styling</h3>
+<p>The widget uses Bootstrap CSS variables, so it follows your <code>theme:</code> and dark mode. Override these custom properties in your own CSS/SCSS:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--version-selector-fg</code></td>
+<td><code>var(--bs-navbar-color)</code></td>
+</tr>
+<tr class="even">
+<td><code>--version-selector-fg-hover</code></td>
+<td><code>var(--bs-navbar-hover-color)</code></td>
+</tr>
+<tr class="odd">
+<td><code>--version-selector-bg</code></td>
+<td><code>transparent</code></td>
+</tr>
+<tr class="even">
+<td><code>--version-selector-border</code></td>
+<td><code>var(--bs-border-color)</code></td>
+</tr>
+<tr class="odd">
+<td><code>--version-selector-menu-bg</code></td>
+<td><code>var(--bs-dropdown-bg)</code>, else the page background (<code>Canvas</code>)</td>
+</tr>
+<tr class="even">
+<td><code>--version-selector-menu-fg</code></td>
+<td><code>var(--bs-dropdown-color)</code>, else the page text color (<code>CanvasText</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>--version-selector-alias-bg</code></td>
+<td><code>var(--bs-secondary-bg)</code></td>
+</tr>
+<tr class="even">
+<td><code>--version-selector-alias-fg</code></td>
+<td><code>var(--bs-secondary-color)</code></td>
+</tr>
+<tr class="odd">
+<td><code>--version-selector-font-size</code></td>
+<td><code>0.875rem</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode css code-with-copy"><code class="sourceCode css"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.quarto-version-selector</span> { <span class="va">--version-selector-border</span><span class="ch">:</span> <span class="dv">transparent</span><span class="op">;</span> }</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="deploy-with-github-actions" class="level2">
+<h2 class="anchored" data-anchor-id="deploy-with-github-actions">Deploy with GitHub Actions</h2>
+<p>Use the custom <code>deploy-version</code> action:</p>
+<p><code>.github/workflows/docs-quarto.yml</code></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> quarto-publish-versioned</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">workflow_dispatch</span><span class="kw">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">release</span><span class="kw">:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">published</span><span class="kw">]</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">]</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">concurrency</span><span class="kw">:</span><span class="co"> # one deploy at a time; the CLI also retries rejected pushes</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">group</span><span class="kw">:</span><span class="at"> docs-deploy</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">cancel-in-progress</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> write</span><span class="co"> # push to gh-pages</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pages</span><span class="kw">:</span><span class="at"> write</span><span class="co"> # request a Pages build after the push</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">deploy-docs</span><span class="kw">:</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v6</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">fetch-depth</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="co"> # tags and history are needed to determine the docs version</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> quarto-dev/quarto-actions/setup@v2</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> CCBR/quarto-version-selector/.github/actions/deploy-version@main</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">github-token</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">          # path: docs # if the Quarto project is in a subfolder</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>Release</strong> of the newest version (e.g.&nbsp;<code>v1.2.0</code>) deploys <code>1.2/</code>, aliases it as <code>latest</code>, and points the root at <code>latest/</code>.</li>
+<li><strong>Release</strong> of an older version deploys <code>1.1/</code> with no alias.</li>
+<li><strong>Push to main</strong> deploys <code>dev/</code>.</li>
+<li>If the commit does not descend from the latest release (common with squash or rebase merges), the action warns and still deploys <code>dev/</code>. Set <code>require-descendant: true</code> to fail instead.</li>
+</ul>
+<p>Configure GitHub Pages to <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch">publish from the <code>gh-pages</code> branch</a>. Pushes made with <code>GITHUB_TOKEN</code> don’t trigger a Pages build on their own, so the action requests one after deploying (this needs <code>pages: write</code>).</p>
+<section id="inputs" class="level3">
+<h3 class="anchored" data-anchor-id="inputs">Inputs</h3>
+<ul>
+<li><code>github-token</code>: GitHub Actions token. <strong>Required.</strong></li>
+<li><code>version-selector-version</code>: git ref of this repo to install. Default: <code>main</code>.</li>
+<li><code>python-version</code>: Python version to install. Default: <code>3.14</code>.</li>
+<li><code>docs-branch</code>: branch to deploy the docs to. Default: <code>gh-pages</code>.</li>
+<li><code>github-actor</code>: username for the deploy commit. Default: <code>41898282+github-actions[bot]</code>.</li>
+<li><code>strict-semver</code>: require strict semantic versioning in release tags. Default: <code>true</code>.</li>
+<li><code>dry-run</code>: print the deploy command without deploying. Default: <code>false</code>.</li>
+<li><code>path</code>: Quarto project directory, relative to the repo root (e.g.&nbsp;<code>docs</code>). Default: <code>.</code>.</li>
+<li><code>site-dir</code>: rendered site directory relative to <code>path</code>; must match the project’s <code>output-dir</code>. Default: <code>_site</code>.</li>
+<li><code>require-descendant</code>: fail instead of warn when the commit does not descend from the latest release. Default: <code>false</code>.</li>
+</ul>
+</section>
+<section id="outputs" class="level3">
+<h3 class="anchored" data-anchor-id="outputs">Outputs</h3>
+<ul>
+<li><code>version</code>: the version deployed.</li>
+<li><code>alias</code>: the alias deployed (empty if none).</li>
+</ul>
+</section>
+</section>
+<section id="migrating-from-mkdocs-mike" class="level2">
+<h2 class="anchored" data-anchor-id="migrating-from-mkdocs-mike">Migrating from mkdocs + mike</h2>
+<p>The docs branch layout and <code>versions.json</code> format match mike’s, so you can switch an existing mike site to Quarto without touching the versions mike already deployed. Their pages keep mike’s version selector, which also lists new Quarto versions. See the step-by-step guide: <a href="./mike.html">Migrating from mkdocs + mike</a>.</p>
+</section>
+<section id="cli" class="level2">
+<h2 class="anchored" data-anchor-id="cli">CLI</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install git+https://github.com/CCBR/quarto-version-selector.git</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># compute version/alias for the current commit (uses `gh` to find the latest release)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> get-version <span class="at">--release-tag</span> v1.2.0</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># deploy _site to gh-pages/1.2 and gh-pages/latest, update versions.json, push</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> deploy <span class="at">--version</span> 1.2 <span class="at">--alias</span> latest <span class="at">--set-default</span> latest <span class="at">--push</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># add an alias to an existing version</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> alias 1.2 stable <span class="at">--push</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># change where the site root redirects</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> set-default latest <span class="at">--push</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># check versions.json on the docs branch (or pass a file path)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> validate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>versions.json</code> must match <a href="https://github.com/CCBR/quarto-version-selector/blob/main/src/quarto_version_selector/versions.schema.json">versions.schema.json</a>, and every version and alias name must be unique. <code>deploy</code>, <code>alias</code>, and <code>set-default</code> validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed <code>versions.json</code> stops the deploy instead of being overwritten. Names must be single directory names (no <code>/</code>, <code>..</code>, or reserved root files such as <code>index.html</code>), and <code>set-default</code> targets must be listed in <code>versions.json</code>.</p>
+<p>Redeploying a version also refreshes all of its aliases. Deploys without <code>--push</code> stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.</p>
+<section id="preview-locally" class="level3">
+<h3 class="anchored" data-anchor-id="preview-locally">Preview locally</h3>
+<p><code>serve</code> previews the whole versioned site, including the version selector, without deploying:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render                                       <span class="co"># or: quarto render docs</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> serve <span class="at">--site-dir</span> _site      <span class="co"># or: --site-dir docs/_site</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>It copies the docs branch into a temporary directory, adds your rendered site as <code>dev</code> (change it with <code>--version</code>), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without <code>--site-dir</code>, it serves the docs branch as is, including deploys you haven’t pushed yet. Re-run it after <code>quarto render</code> to pick up changes.</p>
+<p>The site has to be served over HTTP. Opening the files directly (<code>file://</code>) does not work: browsers block the <code>fetch()</code> of <code>versions.json</code>, so no selector appears, and links to version folders such as <code>../1.2/</code> show a directory listing instead of <code>index.html</code>.</p>
+<p>Run <code>quarto-version-selector &lt;command&gt; --help</code> for all options. Deploys use a temporary git worktree, so your working tree is not touched.</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
