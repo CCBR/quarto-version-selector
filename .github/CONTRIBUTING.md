@@ -39,7 +39,7 @@ cd quarto-version-selector
   Python package in editable mode with its dev dependencies:
 
   ```sh
-  pixi install -e dev
+  pixi install
   ```
 
   Alternatively, without Pixi, install [Quarto](https://quarto.org/docs/get-started/)
@@ -54,7 +54,7 @@ cd quarto-version-selector
   You'll only need to do this step the first time you clone the repo.
 
   ```sh
-  pixi run -e dev pre-commit install
+  pixi run pre-commit install
   ```
 
 ### Create a branch
@@ -87,7 +87,7 @@ Changes to the code need tests to demonstrate that they work as intended:
 Run linting and all tests with:
 
 ```sh
-pixi run -e dev test
+pixi run test
 ```
 
 #### document

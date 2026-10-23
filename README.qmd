@@ -21,8 +21,8 @@ With [Pixi](https://pixi.sh/latest/installation/):
 
 ```bash
 pixi run render            # quarto render the demo site
-pixi run -e dev test       # ruff + pytest + JS tests
-pixi run -e dev pre-commit # all pre-commit hooks
+pixi run test              # ruff + pytest + JS tests
+pixi run pre-commit        # all pre-commit hooks
 ```
 
 Or manually:

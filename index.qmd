@@ -2,7 +2,7 @@
 title: "quarto-version-selector"
 ---
 
-A version dropdown for Quarto websites. The selector appears in the
+A version selector dropdown for Quarto websites. The selector appears in the
 navbar once the site is deployed with `quarto-version-selector deploy`, which
 writes a `versions.json` file to the root of the docs branch.
 

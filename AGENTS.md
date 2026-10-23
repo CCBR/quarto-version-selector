@@ -10,6 +10,11 @@ The Quarto Extension should adhere to current guidelines.
 - Docs: https://quarto.org/docs/extensions/creating.html
 - Example extensions: https://github.com/quarto-ext/
 
+## Documentation
+
+Documentation files are in either Quarto (`.qmd`) or Markdown (`.md`) format.
+The README.md is generated from README.qmd; only make edits in README.qmd, then render it with `pixi run render README.qmd`.
+
 ## Python code
 
 - Python scripts must include module and function/class docstrings.

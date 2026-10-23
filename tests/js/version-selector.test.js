@@ -37,10 +37,10 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
 /** Load the script into a jsdom page and let its fetches settle. */
 async function setup(opts) {
-  const ctx = loadRaw(opts, PATCHED);
-  await tick();
-  await tick();
-  return ctx;
+    const ctx = loadRaw(opts, PATCHED);
+    await tick();
+    await tick();
+    return ctx;
 }
 
 /**
@@ -194,7 +194,7 @@ test("clicking falls back to the version root on network error", async () => {
     assert.deepEqual(nav, ["https://example.org/site/dev/"]);
 });
 
-for (const placement of [undefined, "auto", "navbar"]) {
+for (const placement of [undefined, "navbar-left"]) {
     test(`placement=${placement ?? "default"} mounts as the first item of the left navbar menu`, async () => {
         const { doc } = await setup({ placement });
         const left = doc.querySelector(".navbar-nav.me-auto");
@@ -225,16 +225,23 @@ test("falls back to the navbar collapse when there are no tools", async () => {
     assert.equal(selector(doc).parentElement, doc.querySelector(".navbar-collapse"));
 });
 
-test("without a navbar the selector is fixed to the body", async () => {
-    const { doc } = await setup({ body: "<main></main>" });
-    assert.equal(selector(doc).parentElement, doc.body);
-    assert.ok(selector(doc).classList.contains("quarto-version-selector-fixed"));
-});
+for (const [placement, side] of [[undefined, "left"], ["navbar-left", "left"], ["navbar-right", "right"]]) {
+    test(`placement=${placement ?? "default"} without a navbar is fixed to the top-${side}`, async () => {
+        const { doc } = await setup({ body: "<main></main>", placement });
+        assert.equal(selector(doc).parentElement, doc.body);
+        assert.ok(selector(doc).classList.contains("quarto-version-selector-fixed"));
+        assert.ok(selector(doc).classList.contains(`quarto-version-selector-fixed-${side}`));
+    });
+}
 
-test("placement=fixed ignores the navbar", async () => {
-    const { doc } = await setup({ placement: "fixed" });
-    assert.equal(selector(doc).parentElement, doc.body);
-});
+for (const side of ["left", "right"]) {
+    test(`placement=fixed-${side} ignores the navbar`, async () => {
+        const { doc } = await setup({ placement: `fixed-${side}` });
+        assert.equal(selector(doc).parentElement, doc.body);
+        assert.ok(selector(doc).classList.contains(`quarto-version-selector-fixed-${side}`));
+        assert.ok(!selector(doc).classList.contains("quarto-version-selector-navbar"));
+    });
+}
 
 test("a #version-selector element takes precedence", async () => {
     const { doc } = await setup({ body: NAVBAR + '<div id="version-selector"></div>', placement: "none" });

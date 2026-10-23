@@ -96,6 +96,7 @@ Custom CSS, JavaScript, and theme overrides (`extra_css`, `extra_javascript`, `c
 ## 5. Render and preview
 
 ```bash
+
 quarto render docs                                    # fix every warning, e.g. unresolved links
 quarto-version-selector serve --site-dir docs/_site   # preview at http://localhost:8000/dev/
 ```
