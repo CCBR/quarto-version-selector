@@ -161,6 +161,19 @@ quarto-version-selector validate
 
 Redeploying a version also refreshes all of its aliases. Deploys without `--push` stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.
 
+### Preview locally
+
+`serve` previews the whole versioned site, including the version selector, without deploying:
+
+```bash
+quarto render                                       # or: quarto render docs
+quarto-version-selector serve --site-dir _site      # or: --site-dir docs/_site
+```
+
+It copies the docs branch into a temporary directory, adds your rendered site as `dev` (change it with `--version`), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without `--site-dir`, it serves the docs branch as is, including deploys you haven't pushed yet. Re-run it after `quarto render` to pick up changes.
+
+The site has to be served over HTTP. Opening the files directly (`file://`) does not work: browsers block the `fetch()` of `versions.json`, so no selector appears, and links to version folders such as `../1.2/` show a directory listing instead of `index.html`.
+
 Run `quarto-version-selector <command> --help` for all options. Deploys use a temporary git worktree, so your working tree is not touched.
 
 ## Development

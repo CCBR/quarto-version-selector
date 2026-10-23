@@ -9,5 +9,6 @@ This is the first release of quarto-version-selector 🎉
 - `get-version` no longer fails when the commit does not descend from the latest release (e.g. after squash or rebase merges); it warns and deploys `dev`. Use `--require-descendant` (or the action's `require-descendant` input) for the strict behavior. (#6, @kelly-sovacool)
 - Missing release tags now produce a readable error suggesting `git fetch --tags` instead of a traceback. (#6, @kelly-sovacool)
 - `_extension.yml` now includes a `version` field, kept in sync with the `VERSION` file by a pre-commit hook. (#6, @kelly-sovacool)
+- New `serve` command previews the versioned site locally, with a working version selector, by serving a temporary copy of the docs branch with your rendered site added as `dev`. (#9, @kelly-sovacool)
 - The selector now defaults to the start of the left navbar menu; use `placement: navbar-right` for the previous position next to the navbar tools. (#8, @kelly-sovacool)
 - New guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (@kelly-sovacool)

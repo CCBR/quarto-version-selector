@@ -460,3 +460,88 @@ def test_cli_get_version_not_descendant_warns(repo, monkeypatch):
     )
     assert strict.exit_code == 1
     assert "Error: The current commit" in strict.output
+
+
+def test_preview_site_overlays_local_build(repo):
+    from quarto_version_selector.preview import preview_site
+
+    _site(repo, "one")
+    deploy("1.0", ["latest"], set_default="latest", repo=repo, push=True)
+    _site(repo, "local build")
+    before = git("rev-parse", "gh-pages", cwd=repo)
+    with preview_site(site_dir="_site", repo=repo) as root:
+        assert (root / "dev" / "index.html").read_text() == "local build"
+        assert (root / "1.0" / "index.html").read_text() == "one"
+        assert (root / "latest" / "index.html").read_text() == "one"
+        assert "latest/" in (root / "index.html").read_text()
+        names = [v["version"] for v in json.loads((root / "versions.json").read_text())]
+        assert names == ["dev", "1.0"]
+        preview_root = root
+    assert not preview_root.exists()
+    # the docs branch and worktrees are untouched
+    assert git("rev-parse", "gh-pages", cwd=repo) == before
+    assert git("worktree", "list", cwd=repo).count("\n") == 0
+    assert json.loads(_show(repo, "versions.json"))[0]["version"] == "1.0"
+
+
+def test_preview_site_includes_unpushed_deploys(repo):
+    from quarto_version_selector.preview import preview_site
+
+    _site(repo, "one")
+    deploy("1.0", repo=repo, push=True)
+    _site(repo, "two")
+    deploy("2.0", repo=repo, push=False)
+    with preview_site(repo=repo) as root:
+        assert (root / "2.0" / "index.html").read_text() == "two"
+        assert not (root / "dev").exists()
+
+
+def test_preview_site_without_docs_branch(repo):
+    from quarto_version_selector.preview import preview_site
+
+    _site(repo, "only")
+    with preview_site(site_dir="_site", repo=repo) as root:
+        assert (root / "dev" / "index.html").read_text() == "only"
+        assert "dev/" in (root / "index.html").read_text()
+    with pytest.raises(FileNotFoundError, match="nothing to preview"), preview_site(repo=repo):
+        pass
+
+
+def test_preview_site_missing_site_dir(repo):
+    from quarto_version_selector.preview import preview_site
+
+    with pytest.raises(FileNotFoundError, match="quarto render"), preview_site(site_dir="nope", repo=repo):
+        pass
+
+
+def test_make_server_serves_files(tmp_path):
+    import threading
+    import urllib.request
+
+    from quarto_version_selector.preview import make_server
+
+    (tmp_path / "1.0").mkdir()
+    (tmp_path / "1.0" / "index.html").write_text("hello")
+    (tmp_path / "versions.json").write_text("[]")
+    server = make_server(tmp_path, port=0)
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/1.0/") as resp:
+            assert resp.read() == b"hello"
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/versions.json") as resp:
+            assert resp.read() == b"[]"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_cli_serve_errors(repo, monkeypatch):
+    monkeypatch.chdir(repo)
+    result = CliRunner().invoke(cli, ["serve", "--no-open"])
+    assert result.exit_code == 1
+    assert "nothing to preview" in result.output
+    result = CliRunner().invoke(cli, ["serve", "--site-dir", "nope", "--no-open"])
+    assert result.exit_code == 1
+    assert "Did you run `quarto render`?" in result.output
