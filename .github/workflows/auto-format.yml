@@ -55,6 +55,11 @@ jobs:
         with:
           args: "--format codemeta --outfile codemeta.json"
 
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: render README
+        run: quarto render README.qmd
+
       - name: format
         uses: pre-commit/action@v3.0.1
         continue-on-error: true
