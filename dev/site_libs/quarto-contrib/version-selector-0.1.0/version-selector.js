@@ -130,7 +130,8 @@
             return;
         }
         if (placement === "none") return;
-        if (placement !== "fixed") {
+        var fixed = placement === "fixed-left" || placement === "fixed-right";
+        if (!fixed) {
             var header = "#quarto-header ";
             var left = document.querySelector(header + ".navbar-collapse .navbar-nav.me-auto") ||
                 document.querySelector(header + ".navbar-collapse .navbar-nav");
@@ -158,7 +159,9 @@
             }
             widget.classList.remove("quarto-version-selector-navbar");
         }
-        widget.classList.add("quarto-version-selector-fixed");
+        // No navbar: pin to the matching side (navbar-left -> fixed-left).
+        var side = placement === "fixed-left" || placement === "navbar-left" ? "left" : "right";
+        widget.classList.add("quarto-version-selector-fixed", "quarto-version-selector-fixed-" + side);
         document.body.appendChild(widget);
     }
 
@@ -170,7 +173,7 @@
             ? window.location.pathname.slice(root.pathname.length)
             : "";
         var versionsFile = meta("version-selector:versions-file", "versions.json");
-        var placement = meta("version-selector:placement", "auto");
+        var placement = meta("version-selector:placement", "navbar-left");
 
         fetch(new URL(versionsFile, siteRoot).href)
             .then(function (r) {

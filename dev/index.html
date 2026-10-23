@@ -114,7 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <meta name="version-selector:versions-file" content="versions.json">
-<meta name="version-selector:placement" content="auto">
+<meta name="version-selector:placement" content="navbar-left">
 
 
 </head>
@@ -347,7 +347,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>A version dropdown for Quarto websites. The selector appears in the navbar once the site is deployed with <code>quarto-version-selector deploy</code>, which writes a <code>versions.json</code> file to the root of the docs branch.</p>
+<p>A version selector dropdown for Quarto websites. The selector appears in the navbar once the site is deployed with <code>quarto-version-selector deploy</code>, which writes a <code>versions.json</code> file to the root of the docs branch.</p>
 <p>Inspired by the <a href="https://github.com/jimporter/mike">mike</a> plugin for mkdocs.</p>
 <section id="how-it-works" class="level2">
 <h2 class="anchored" data-anchor-id="how-it-works">How it works</h2>
@@ -373,11 +373,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="options">Options</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version-selector</span><span class="kw">:</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">versions-file</span><span class="kw">:</span><span class="at"> versions.json</span><span class="co">   # relative to the root of the docs branch</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">placement</span><span class="kw">:</span><span class="at"> auto</span><span class="co">                # auto | navbar | navbar-right | fixed | none</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">placement</span><span class="kw">:</span><span class="at"> navbar-left</span><span class="co">         # navbar-left | navbar-right | fixed-left | fixed-right | none</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li><code>auto</code> / <code>navbar</code>: the start of the left navbar menu (before the <code>navbar: left:</code> links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, <code>auto</code> pins it to the top-right of the page.</li>
-<li><code>navbar-right</code>: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle).</li>
-<li><code>fixed</code>: pinned to the top-right corner of the page.</li>
+<li><code>navbar-left</code> (default): the start of the left navbar menu (before the <code>navbar: left:</code> links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, it is pinned to the top-left of the page.</li>
+<li><code>navbar-right</code>: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle). With no navbar at all, it is pinned to the top-right of the page.</li>
+<li><code>fixed-left</code> / <code>fixed-right</code>: pinned to the top-left or top-right corner of the page.</li>
 <li><code>none</code>: only shown in a <code>#version-selector</code> element (see below).</li>
 </ul>
 <p>To place the selector somewhere specific, add an empty div with id <code>version-selector</code>:</p>

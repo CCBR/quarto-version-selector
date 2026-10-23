@@ -114,7 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <meta name="version-selector:versions-file" content="versions.json">
-<meta name="version-selector:placement" content="auto">
+<meta name="version-selector:placement" content="navbar-left">
 
 
 </head>
@@ -449,8 +449,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="render-and-preview" class="level2">
 <h2 class="anchored" data-anchor-id="render-and-preview">5. Render and preview</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render docs                                    <span class="co"># fix every warning, e.g. unresolved links</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> serve <span class="at">--site-dir</span> docs/_site   <span class="co"># preview at http://localhost:8000/dev/</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render docs                                    <span class="co"># fix every warning, e.g. unresolved links</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto-version-selector</span> serve <span class="at">--site-dir</span> docs/_site   <span class="co"># preview at http://localhost:8000/dev/</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>serve</code> copies the <code>gh-pages</code> branch (including the old mike versions) into a temporary directory, adds the rendered site as <code>dev</code>, and serves it with a working version selector. Nothing in the repository changes. Re-run it after each <code>quarto render</code>. Plain <code>quarto preview docs</code> also works for live editing, but it doesn’t show the version selector because there is no <code>versions.json</code> next to the site.</p>
 </section>
 <section id="remove-mkdocs" class="level2">
