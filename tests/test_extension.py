@@ -75,7 +75,7 @@ def test_website_defaults(tmp_path):
     )
     html = (proj / "_site" / "index.html").read_text()
     assert meta(html, "version-selector:versions-file") == "versions.json"
-    assert meta(html, "version-selector:placement") == "auto"
+    assert meta(html, "version-selector:placement") == "navbar-left"
     assert f"quarto-contrib/version-selector-{VERSION}/version-selector.js" in html
     assert f"quarto-contrib/version-selector-{VERSION}/version-selector.css" in html
     libdir = proj / "_site" / "site_libs" / "quarto-contrib" / f"version-selector-{VERSION}"
@@ -103,11 +103,22 @@ def test_options_are_passed_through(tmp_path):
     proj = render(
         tmp_path,
         "project:\n  type: website\nwebsite:\n  title: t\nfilters:\n  - version-selector\n"
-        "version-selector:\n  versions-file: meta/v.json\n  placement: fixed\nformat: html\n",
+        "version-selector:\n  versions-file: meta/v.json\n  placement: fixed-right\nformat: html\n",
     )
     html = (proj / "_site" / "index.html").read_text()
     assert meta(html, "version-selector:versions-file") == "meta/v.json"
-    assert meta(html, "version-selector:placement") == "fixed"
+    assert meta(html, "version-selector:placement") == "fixed-right"
+
+
+@requires_quarto
+def test_unknown_placement_falls_back_to_navbar_left(tmp_path):
+    proj = render(
+        tmp_path,
+        "project:\n  type: website\nwebsite:\n  title: t\nfilters:\n  - version-selector\n"
+        "version-selector:\n  placement: auto\nformat: html\n",
+    )
+    html = (proj / "_site" / "index.html").read_text()
+    assert meta(html, "version-selector:placement") == "navbar-left"
 
 
 @requires_quarto
