@@ -88,6 +88,13 @@
 .quarto-version-selector-fixed {
   position: fixed;
   top: 0.5rem;
-  right: 0.5rem;
   z-index: 1100;
+}
+
+.quarto-version-selector-fixed-left {
+  left: 0.5rem;
+}
+
+.quarto-version-selector-fixed-right {
+  right: 0.5rem;
 }

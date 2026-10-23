@@ -4,22 +4,22 @@
 -- Optional document/project metadata:
 --   version-selector:
 --     versions-file: versions.json   # path relative to the site root of all versions
---     placement: auto                # auto | navbar | navbar-right | fixed | none
+--     placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | none
 
 -- The extension's version is read from the VERSION file next to this script,
 -- the single source of truth also used by the Python package and release tooling.
 local function read_version()
-  local file = io.open(quarto.utils.resolve_path("VERSION"), "r")
-  if file == nil then
-    return "0.0.0"
-  end
-  local version = file:read("*l") or ""
-  file:close()
-  version = version:gsub("^%s+", ""):gsub("%s+$", "")
-  if version == "" then
-    return "0.0.0"
-  end
-  return version
+    local file = io.open(quarto.utils.resolve_path("VERSION"), "r")
+    if file == nil then
+        return "0.0.0"
+    end
+    local version = file:read("*l") or ""
+    file:close()
+    version = version:gsub("^%s+", ""):gsub("%s+$", "")
+    if version == "" then
+        return "0.0.0"
+    end
+    return version
 end
 
 local function meta_string(value, default)
@@ -36,7 +36,21 @@ function Meta(meta)
 
     local opts = meta["version-selector"] or {}
     local versions_file = meta_string(opts["versions-file"], "versions.json")
-    local placement = meta_string(opts["placement"], "auto")
+    local valid = {
+        ["navbar-left"] = true,
+        ["navbar-right"] = true,
+        ["fixed-left"] = true,
+        ["fixed-right"] = true,
+        ["none"] = true,
+    }
+    local placement = meta_string(opts["placement"], "navbar-left")
+    if not valid[placement] then
+        quarto.log.warning(string.format(
+            "version-selector: unknown placement '%s'; expected navbar-left, navbar-right, " ..
+            "fixed-left, fixed-right, or none. Using navbar-left.", placement
+        ))
+        placement = "navbar-left"
+    end
 
     quarto.doc.add_html_dependency({
         name = "version-selector",

@@ -2,8 +2,10 @@
 title: "quarto-version-selector"
 ---
 
-A for Quarto websites. The selector appears in the
+A version selector dropdown for Quarto websites. The selector appears in the
 navbar once the site is deployed with `quarto-version-selector deploy`, which
 writes a `versions.json` file to the root of the docs branch.
 
-See the [README](https://github.com/CCBR/quarto-version-selector#readme) for usage.
+Inspired by the [mike](https://github.com/jimporter/mike) plugin for mkdocs.
+
+{{< include _usage.qmd >}}
