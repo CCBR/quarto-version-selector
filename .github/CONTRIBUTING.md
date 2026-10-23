@@ -90,16 +90,16 @@ Run linting and all tests with:
 pixi run -e dev test
 ```
 
-Also check that the demo site still renders with `pixi run render`.
-
 #### document
 
 If you have added a new feature or changed the behavior of an existing feature,
-update `README.md`, including the extension options, CSS custom properties,
+update `_usage.qmd` (included in both `README.qmd` and `index.qmd`; re-render `README.md` with `quarto render README.qmd`), including the extension options, CSS custom properties,
 CLI usage, and action inputs/outputs as relevant.
 If your changes are in `src/`, you may need to update the docstrings as well.
 All Python modules, functions, and classes should have docstrings that follow the
 [Google format](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+Check that the demo site still renders with `pixi run serve`.
 
 For user-facing changes, add an entry to `CHANGELOG.md` under the development
 version with the PR number and your GitHub username, e.g.

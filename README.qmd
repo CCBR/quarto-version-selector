@@ -1,0 +1,50 @@
+---
+format:
+  gfm:
+    wrap: preserve
+---
+
+<!-- README.md is generated from README.qmd; edit README.qmd and _usage.qmd, then run `quarto render README.qmd`. -->
+
+# quarto-version-selector
+
+A version dropdown for [Quarto](https://quarto.org/) websites.
+
+Inspired by the [mike](https://github.com/jimporter/mike) plugin for mkdocs.
+
+{{< include _usage.qmd >}}
+
+
+## Development
+
+With [Pixi](https://pixi.sh/latest/installation/):
+
+```bash
+pixi run render            # quarto render the demo site
+pixi run -e dev test       # ruff + pytest + JS tests
+pixi run -e dev pre-commit # all pre-commit hooks
+```
+
+Or manually:
+
+```bash
+pip install -e ".[dev]"
+ruff check .
+pytest          # CLI + extension render tests (extension tests need quarto)
+npm install && npm test   # JS widget tests (node:test + jsdom)
+quarto render
+```
+
+## Help & Contributing
+
+Come across a **bug**? Open an [issue](https://github.com/CCBR/quarto-version-selector/issues)
+and include a minimal reproducible example.
+
+Have a **question**? Ask it in
+[discussions](https://github.com/CCBR/quarto-version-selector/discussions).
+
+Want to **contribute** to this project? Check out the
+[contributing guidelines](.github/CONTRIBUTING.md).
+
+**General Inquiries and Collaboration:** Please contact the CCBR Pipeliner team
+at [CCBR_Pipeliner@mail.nih.gov](mailto:CCBR_Pipeliner@mail.nih.gov).

@@ -3,6 +3,7 @@ project:
   render:
     - index.qmd
     - template.qmd
+    - mike.qmd
 
 website:
   title: "quarto-version-selector"
@@ -12,6 +13,8 @@ website:
         text: Home
       - href: template.qmd
         text: Example
+      - href: mike.qmd
+        text: Migrating from mike
     tools:
       - icon: github
         href: https://github.com/CCBR/quarto-version-selector
