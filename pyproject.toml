@@ -54,7 +54,7 @@ pre-commit = "*"
 
 [tool.pixi.tasks]
 render = "quarto render"
-preview = "quarto preview"
+serve = "quarto render && quarto-version-selector serve --site-dir _site"
 
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check ."

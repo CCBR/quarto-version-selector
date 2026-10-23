@@ -90,8 +90,6 @@ Run linting and all tests with:
 pixi run -e dev test
 ```
 
-Also check that the demo site still renders with `pixi run render`.
-
 #### document
 
 If you have added a new feature or changed the behavior of an existing feature,
@@ -100,6 +98,8 @@ CLI usage, and action inputs/outputs as relevant.
 If your changes are in `src/`, you may need to update the docstrings as well.
 All Python modules, functions, and classes should have docstrings that follow the
 [Google format](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+Check that the demo site still renders with `pixi run serve`.
 
 For user-facing changes, add an entry to `CHANGELOG.md` under the development
 version with the PR number and your GitHub username, e.g.
