@@ -130,6 +130,16 @@
             return;
         }
         if (placement === "none") return;
+        if (placement === "sidebar") {
+            // Top of the docked sidebar; fall back to navbar-left without one.
+            var sidebar = document.querySelector("#quarto-sidebar");
+            if (sidebar) {
+                widget.classList.add("quarto-version-selector-sidebar");
+                sidebar.insertBefore(widget, sidebar.firstChild);
+                return;
+            }
+            placement = "navbar-left";
+        }
         var fixed = placement === "fixed-left" || placement === "fixed-right";
         if (!fixed) {
             var header = "#quarto-header ";

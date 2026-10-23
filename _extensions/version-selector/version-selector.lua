@@ -4,7 +4,7 @@
 -- Optional document/project metadata:
 --   version-selector:
 --     versions-file: versions.json   # path relative to the site root of all versions
---     placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | none
+--     placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none
 
 -- The extension's version is read from the VERSION file next to this script,
 -- the single source of truth also used by the Python package and release tooling.
@@ -41,13 +41,14 @@ function Meta(meta)
         ["navbar-right"] = true,
         ["fixed-left"] = true,
         ["fixed-right"] = true,
+        ["sidebar"] = true,
         ["none"] = true,
     }
     local placement = meta_string(opts["placement"], "navbar-left")
     if not valid[placement] then
         quarto.log.warning(string.format(
             "version-selector: unknown placement '%s'; expected navbar-left, navbar-right, " ..
-            "fixed-left, fixed-right, or none. Using navbar-left.", placement
+            "fixed-left, fixed-right, sidebar, or none. Using navbar-left.", placement
         ))
         placement = "navbar-left"
     end

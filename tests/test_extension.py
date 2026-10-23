@@ -111,6 +111,17 @@ def test_options_are_passed_through(tmp_path):
 
 
 @requires_quarto
+def test_sidebar_placement_is_accepted(tmp_path):
+    proj = render(
+        tmp_path,
+        "project:\n  type: website\nwebsite:\n  title: t\nfilters:\n  - version-selector\n"
+        "version-selector:\n  placement: sidebar\nformat: html\n",
+    )
+    html = (proj / "_site" / "index.html").read_text()
+    assert meta(html, "version-selector:placement") == "sidebar"
+
+
+@requires_quarto
 def test_unknown_placement_falls_back_to_navbar_left(tmp_path):
     proj = render(
         tmp_path,
