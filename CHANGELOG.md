@@ -13,3 +13,4 @@ This is the first release of quarto-version-selector 🎉
 - The selector now defaults to the start of the left navbar menu; use `placement: navbar-right` for the previous position next to the navbar tools. (#8, @kelly-sovacool)
 - New guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, @kelly-sovacool)
 - `placement` options are now `navbar-left` (default), `navbar-right`, `fixed-left`, `fixed-right`, and `none`; `auto`, `navbar`, and `fixed` are removed. Unknown values warn and fall back to `navbar-left`. (#11, @kelly-sovacool)
+- New `sidebar` placement mounts the selector at the top of the docked sidebar, falling back to `navbar-left` on pages without one. (#PR, @kelly-sovacool)
