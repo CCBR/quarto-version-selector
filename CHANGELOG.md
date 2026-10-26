@@ -1,5 +1,7 @@
 ## quarto-version-selector development version
 
+## quarto-version-selector 1.0.0
+
 This is the first release of quarto-version-selector 🎉
 
 - Quarto extension `version-selector` adds a version dropdown to any Quarto HTML format, driven by a root `versions.json`. (#2, #6, @copilot, @kelly-sovacool)

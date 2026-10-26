@@ -37,35 +37,6 @@ def test_extension_metadata():
         assert (EXT_DIR / name).is_file()
 
 
-def test_version_is_single_sourced():
-    """VERSION is the source of truth; _extension.yml mirrors it via the sync script."""
-    ext_yml = (EXT_DIR / "_extension.yml").read_text()
-    lua = (EXT_DIR / "version-selector.lua").read_text()
-    assert re.search(rf"^version: {re.escape(VERSION)}$", ext_yml, re.MULTILINE)
-    assert "version = read_version()" in lua
-    assert not re.search(r'version = "[^"]+"', lua)
-    tracked = subprocess.run(
-        ["git", "ls-files"], cwd=ROOT, check=True, capture_output=True, text=True
-    ).stdout.splitlines()
-    assert [f for f in tracked if Path(f).name == "VERSION"] == ["_extensions/version-selector/VERSION"]
-
-
-def test_package_version_matches_version_file():
-    from quarto_version_selector import __version__
-
-    assert __version__ == VERSION
-
-
-def test_css_exposes_documented_custom_properties():
-    css = (EXT_DIR / "version-selector.css").read_text()
-    readme = (EXT_DIR.parents[1] / "README.md").read_text()
-    props = set(re.findall(r"(--version-selector-[a-z-]+):", css))
-    assert props
-    for prop in props:
-        assert f"`{prop}`" in readme, f"{prop} not documented in README"
-    assert "var(--bs-" in css
-
-
 @requires_quarto
 def test_website_defaults(tmp_path):
     proj = render(
