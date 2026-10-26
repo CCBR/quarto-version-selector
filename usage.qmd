@@ -1,3 +1,9 @@
+---
+title: "Advanced Usage Guide"
+toc: true
+toc-location: left
+---
+
 ## How it works
 
 ```
@@ -12,23 +18,7 @@ gh-pages/
 
 The extension's JavaScript reads `versions.json` from the parent of the current version directory and renders a dropdown. Choosing a version opens the same page in that version, or the version's home page if the page doesn't exist there. When `versions.json` is missing (e.g. `quarto preview`), no selector is shown.
 
-## Install the extension
-
-```bash
-quarto add CCBR/quarto-version-selector
-```
-
-Enable the filter in `_quarto.yml`:
-
-```yaml
-filters:
-  - version-selector
-
-format:
-  html: default     # or e.g. fnl-html
-```
-
-### Options
+## Extension options
 
 ```yaml
 version-selector:
@@ -36,13 +26,15 @@ version-selector:
   placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none
 ```
 
+Placement details:
+
 - `navbar-left` (default): the start of the left navbar menu (before the `navbar: left:` links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, it is pinned to the top-left of the page.
 - `navbar-right`: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle). With no navbar at all, it is pinned to the top-right of the page.
 - `fixed-left` / `fixed-right`: pinned to the top-left or top-right corner of the page.
 - `sidebar`: the top of the docked sidebar, above the sidebar title, search, and navigation links. If the page has no sidebar, it falls back to `navbar-left`.
-- `none`: only shown in a `#version-selector` element (see below).
+- `none`: only shown in a `#version-selector` element.
 
-To place the selector somewhere specific, add an empty div with id `version-selector`:
+With any placement, an empty div with id `version-selector` overrides where the selector goes:
 
 ```markdown
 ::: {#version-selector}
@@ -70,45 +62,14 @@ Override these custom properties in your own CSS/SCSS:
 .quarto-version-selector { --version-selector-border: transparent; }
 ```
 
-## Deploy with GitHub Actions
+## The `deploy-version` action
 
-Use the custom `deploy-version` action:
-
-`.github/workflows/docs-quarto.yml`
-```yaml
-name: quarto-publish-versioned
-on:
-  workflow_dispatch:
-  release:
-    types: [published]
-  push:
-    branches: [main]
-concurrency: # one deploy at a time; the CLI also retries rejected pushes
-  group: docs-deploy
-  cancel-in-progress: false
-permissions:
-  contents: write # push to gh-pages
-  pages: write # request a Pages build after the push
-jobs:
-  deploy-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # tags and history are needed to determine the docs version
-      - uses: quarto-dev/quarto-actions/setup@v2
-      - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # path: docs # if the Quarto project is in a subfolder
-```
+In the workflow above, `fetch-depth: 0` is needed so tags and history can determine the docs version, `concurrency` keeps deploys from running at the same time (the CLI also retries rejected pushes), and `pages: write` lets the action request a Pages build: pushes made with `GITHUB_TOKEN` don't trigger one on their own. If the Quarto project is in a subfolder, set `path:` (e.g. `path: docs`).
 
 - **Release** of the newest version (e.g. `v1.2.0`) deploys `1.2/`, aliases it as `latest`, and points the root at `latest/`.
 - **Release** of an older version deploys `1.1/` with no alias.
 - **Push to main** deploys `dev/`.
 - If the commit does not descend from the latest release (common with squash or rebase merges), the action warns and still deploys `dev/`. Set `require-descendant: true` to fail instead.
-
-Configure GitHub Pages to [publish from the `gh-pages` branch](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch). Pushes made with `GITHUB_TOKEN` don't trigger a Pages build on their own, so the action requests one after deploying (this needs `pages: write`).
 
 ### Inputs
 

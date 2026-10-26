@@ -1,28 +1,26 @@
 project:
   type: website
-  render:
-    - index.qmd
-    - template.qmd
-    - mike.qmd
 
 website:
   title: "quarto-version-selector"
   navbar:
+    left:
+      - href: index.qmd
+        text: Quickstart
+      - href: usage.qmd
+        text: Advanced Usage
+      - href: mike.qmd
+        text: Migrating from mike
     tools:
       - icon: github
         href: https://github.com/CCBR/quarto-version-selector
-  sidebar:
-    style: docked
-    contents:
-      - href: index.qmd
-        text: Home
-      - href: template.qmd
-        text: Example
-      - href: mike.qmd
-        text: Migrating from mike
+
 
 filters:
   - version-selector
+
+version-selector:
+  placement: navbar-left
 
 format:
   html:

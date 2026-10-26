@@ -1,5 +1,25 @@
 # Contributing to quarto-version-selector
 
+## Development commands
+
+With [Pixi](https://pixi.sh/latest/installation/):
+
+```bash
+pixi run render            # quarto render the demo site
+pixi run test              # ruff + pytest + JS tests
+pixi run pre-commit        # all pre-commit hooks
+```
+
+Or manually:
+
+```bash
+pip install -e ".[dev]"
+ruff check .
+pytest          # CLI + extension render tests (extension tests need quarto)
+npm install && npm test   # JS widget tests (node:test + jsdom)
+quarto render
+```
+
 ## Proposing changes with issues
 
 If you want to make a change, it's a good idea to first

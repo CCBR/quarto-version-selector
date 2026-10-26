@@ -8,4 +8,4 @@ writes a `versions.json` file to the root of the docs branch.
 
 Inspired by the [mike](https://github.com/jimporter/mike) plugin for mkdocs.
 
-{{< include _usage.qmd >}}
+{{< include _quickstart.qmd >}}
