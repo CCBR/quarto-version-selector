@@ -50,7 +50,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/bootstrap/bootstrap-12a87ce4a3db8ae78ad34dc8821cdee3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="site_libs/bootstrap/bootstrap-dark-a641a5c3cabf67377571dedadff2d895.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <link href="site_libs/bootstrap/bootstrap-12a87ce4a3db8ae78ad34dc8821cdee3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/quarto-contrib/version-selector-0.1.0/version-selector.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/version-selector-1.0.0/version-selector.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -300,18 +300,18 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="quarto-version-selector-development-version">quarto-version-selector development version</h2>
 <p>This is the first release of quarto-version-selector 🎉</p>
 <ul>
-<li>Quarto extension <code>version-selector</code> adds a version dropdown to any Quarto HTML format, driven by a root <code>versions.json</code>. (#2, <span class="citation" data-cites="copilot">@copilot</span>, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li><code>quarto-version-selector</code> CLI with <code>get-version</code>, <code>deploy</code>, <code>alias</code>, <code>set-default</code>, and <code>validate</code> commands to deploy each version into its own subfolder of the docs branch. <code>versions.json</code> is validated against a JSON schema on every read and write.</li>
-<li>Composite GitHub Action <code>deploy-version</code> that renders the site and deploys release builds as <code>major.minor</code> (aliased <code>latest</code> for the newest release) and main-branch builds as <code>dev</code>.</li>
-<li><code>deploy-version</code> action gains <code>path</code> and <code>site-dir</code> inputs to render and deploy Quarto projects in a subfolder (e.g.&nbsp;<code>docs/</code>). (#6, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li><code>get-version</code> no longer fails when the commit does not descend from the latest release (e.g.&nbsp;after squash or rebase merges); it warns and deploys <code>dev</code>. Use <code>--require-descendant</code> (or the action’s <code>require-descendant</code> input) for the strict behavior. (#6, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li>Missing release tags now produce a readable error suggesting <code>git fetch --tags</code> instead of a traceback. (#6, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li><code>_extension.yml</code> now includes a <code>version</code> field, kept in sync with the <code>VERSION</code> file by a pre-commit hook. (#6, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li>New <code>serve</code> command previews the versioned site locally, with a working version selector, by serving a temporary copy of the docs branch with your rendered site added as <code>dev</code>. (#9, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li>The selector now defaults to the start of the left navbar menu; use <code>placement: navbar-right</code> for the previous position next to the navbar tools. (#8, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li>New guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li><code>placement</code> options are now <code>navbar-left</code> (default), <code>navbar-right</code>, <code>fixed-left</code>, <code>fixed-right</code>, and <code>none</code>; <code>auto</code>, <code>navbar</code>, and <code>fixed</code> are removed. Unknown values warn and fall back to <code>navbar-left</code>. (#11, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
-<li>New <code>sidebar</code> placement mounts the selector at the top of the docked sidebar, falling back to <code>navbar-left</code> on pages without one. (#12, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
+<li>Quarto extension <code>version-selector</code> adds a version dropdown to any Quarto HTML format, driven by a root <code>versions.json</code>. (#2, #6, <span class="citation" data-cites="copilot">@copilot</span>, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)
+<ul>
+<li><code>placement</code> options: <code>navbar-left</code> (default), <code>navbar-right</code>, <code>sidebar</code> (falls back to <code>navbar-left</code> on pages without a docked sidebar), <code>fixed-left</code>, <code>fixed-right</code>, and <code>none</code>. Unknown values warn and fall back to <code>navbar-left</code>. (#8, #11, #12, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
+</ul></li>
+<li><code>quarto-version-selector</code> CLI deploys each version into its own subfolder of the docs branch. (#2, #6, #9, <span class="citation" data-cites="copilot">@copilot</span>, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)
+<ul>
+<li>Commands: <code>get-version</code>, <code>deploy</code>, <code>alias</code>, <code>set-default</code>, <code>validate</code>, and <code>serve</code>. <code>serve</code> previews the versioned site locally with your rendered site added as <code>dev</code>.</li>
+<li><code>versions.json</code> is checked against a JSON schema every time it is read or written.</li>
+<li>If the commit doesn’t descend from the latest release (e.g.&nbsp;after a squash or rebase merge), <code>get-version</code> warns and deploys <code>dev</code>. Use <code>--require-descendant</code> to make it fail instead. If release tags are missing, it gives an error suggesting <code>git fetch --tags</code>.</li>
+</ul></li>
+<li>Composite GitHub Action <code>deploy-version</code> renders and deploys the site. Release builds go out as <code>major.minor</code>, with <code>latest</code> pointing to the newest release, and main-branch builds go out as <code>dev</code>. It supports <code>path</code>/<code>site-dir</code> inputs for projects in a subfolder, and a <code>require-descendant</code> input. (#2, #6, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
+<li>Guide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, <span class="citation" data-cites="kelly-sovacool">@kelly-sovacool</span>)</li>
 </ul>
 
 
@@ -736,5 +736,5 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<script src="site_libs/quarto-contrib/version-selector-0.1.0/version-selector.js"></script>
+<script src="site_libs/quarto-contrib/version-selector-1.0.0/version-selector.js"></script>
 </body></html>
