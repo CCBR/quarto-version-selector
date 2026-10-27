@@ -1,6 +1,6 @@
 ## quarto-version-selector development version
 
-- New `label` extension option prepends text such as `v` or `Version` to the current version in the dropdown button. (#TODO, @kelly-sovacool)
+- New `label` extension option prepends text such as `v` or `Version` to the current version in the dropdown button. (#14, @kelly-sovacool)
 
 ## quarto-version-selector 1.0.0
 
