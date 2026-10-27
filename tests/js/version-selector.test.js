@@ -56,9 +56,11 @@ function loadRaw(opts = {}, source) {
         versionsUrl = "https://example.org/site/versions.json",
         placement,
         versionsFile,
+        label,
         responses = {},
     } = opts;
     const metas = [
+        label !== undefined ? `<meta name="version-selector:label" content="${label}">` : "",
         `<meta name="quarto:offset" content="${offset}">`,
         placement ? `<meta name="version-selector:placement" content="${placement}">` : "",
         versionsFile ? `<meta name="version-selector:versions-file" content="${versionsFile}">` : "",
@@ -118,6 +120,27 @@ test("renders versions in order with aliases and marks the current one", async (
     assert.ok(its[1].classList.contains("active"));
     assert.equal(its[1].getAttribute("aria-current"), "true");
     assert.equal(doc.querySelector(".quarto-version-selector-toggle").textContent, "1.1");
+});
+
+for (const [label, expected] of [
+    [undefined, "1.1"],
+    ["", "1.1"],
+    ["v", "v1.1"],
+    ["Version", "Version 1.1"],
+    ["  Version  ", "Version 1.1"],
+]) {
+    test(`label=${JSON.stringify(label)} gives toggle text ${JSON.stringify(expected)}`, async () => {
+        const { doc } = await setup({ label });
+        const toggle = doc.querySelector(".quarto-version-selector-toggle");
+        assert.equal(toggle.textContent, expected);
+        assert.equal(toggle.querySelector(".quarto-version-selector-current").textContent, "1.1");
+        assert.equal(toggle.querySelector(".quarto-version-selector-label") !== null, expected !== "1.1");
+    });
+}
+
+test("label is not added to dropdown items", async () => {
+    const { doc } = await setup({ label: "v" });
+    assert.equal(items(doc)[1].querySelector(".quarto-version-selector-title").textContent, "1.1");
 });
 
 test("an alias directory resolves to its version", async () => {
