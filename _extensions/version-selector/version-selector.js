@@ -57,7 +57,16 @@
             });
     }
 
-    function build(versions, current, siteRoot, relPath) {
+    // Optional prefix shown before the current version in the toggle button.
+    // Single-character labels (e.g. "v") attach directly: "v1.1";
+    // longer labels (e.g. "Version") are followed by a space: "Version 1.1".
+    function prefixNode(prefix) {
+        prefix = (prefix || "").trim();
+        if (!prefix) return null;
+        return el("span", { class: "quarto-version-selector-label" }, prefix.length > 1 ? prefix + " " : prefix);
+    }
+
+    function build(versions, current, siteRoot, relPath, prefix) {
         var currentEntry = versions.find(function (v) {
             return v.version === current || (v.aliases || []).indexOf(current) !== -1;
         });
@@ -70,7 +79,10 @@
             "data-bs-toggle": "dropdown",
             "aria-expanded": "false",
             "aria-label": "Select documentation version",
-        }, label);
+        });
+        var prefixEl = prefixNode(prefix);
+        if (prefixEl) button.appendChild(prefixEl);
+        button.appendChild(el("span", { class: "quarto-version-selector-current" }, label));
         var menu = el("ul", { class: "dropdown-menu dropdown-menu-end quarto-version-selector-menu" });
 
         versions.forEach(function (v) {
@@ -184,6 +196,7 @@
             : "";
         var versionsFile = meta("version-selector:versions-file", "versions.json");
         var placement = meta("version-selector:placement", "navbar-left");
+        var prefix = meta("version-selector:label", "");
 
         fetch(new URL(versionsFile, siteRoot).href)
             .then(function (r) {
@@ -192,7 +205,7 @@
             })
             .then(function (versions) {
                 if (!Array.isArray(versions) || versions.length === 0) return;
-                mount(build(versions, current, siteRoot, relPath + window.location.hash), placement);
+                mount(build(versions, current, siteRoot, relPath + window.location.hash, prefix), placement);
             })
             .catch(function () {
                 // No versions.json (e.g. local preview): render nothing.

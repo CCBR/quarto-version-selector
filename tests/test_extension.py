@@ -79,6 +79,18 @@ def test_options_are_passed_through(tmp_path):
     html = (proj / "_site" / "index.html").read_text()
     assert meta(html, "version-selector:versions-file") == "meta/v.json"
     assert meta(html, "version-selector:placement") == "fixed-right"
+    assert meta(html, "version-selector:label") == ""
+
+
+@requires_quarto
+def test_label_option_is_passed_through(tmp_path):
+    proj = render(
+        tmp_path,
+        "project:\n  type: website\nwebsite:\n  title: t\nfilters:\n  - version-selector\n"
+        'version-selector:\n  label: "Version"\nformat: html\n',
+    )
+    html = (proj / "_site" / "index.html").read_text()
+    assert meta(html, "version-selector:label") == "Version"
 
 
 @requires_quarto
