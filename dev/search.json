@@ -1,10 +1,10 @@
 [
   {
-    "objectID": "CHANGELOG.html#quarto-version-selector-1.0.0",
-    "href": "CHANGELOG.html#quarto-version-selector-1.0.0",
-    "title": "quarto-version-selector",
-    "section": "quarto-version-selector 1.0.0",
-    "text": "quarto-version-selector 1.0.0\nThis is the first release of quarto-version-selector 🎉\n\nQuarto extension version-selector adds a version dropdown to any Quarto HTML format, driven by a root versions.json. (#2, #6, @copilot, @kelly-sovacool)\n\nplacement options: navbar-left (default), navbar-right, sidebar (falls back to navbar-left on pages without a docked sidebar), fixed-left, fixed-right, and none. Unknown values warn and fall back to navbar-left. (#8, #11, #12, @kelly-sovacool)\n\nquarto-version-selector CLI deploys each version into its own subfolder of the docs branch. (#2, #6, #9, @copilot, @kelly-sovacool)\n\nCommands: get-version, deploy, alias, set-default, validate, and serve. serve previews the versioned site locally with your rendered site added as dev.\nversions.json is checked against a JSON schema every time it is read or written.\nIf the commit doesn’t descend from the latest release (e.g. after a squash or rebase merge), get-version warns and deploys dev. Use --require-descendant to make it fail instead. If release tags are missing, it gives an error suggesting git fetch --tags.\n\nComposite GitHub Action deploy-version renders and deploys the site. Release builds go out as major.minor, with latest pointing to the newest release, and main-branch builds go out as dev. It supports path/site-dir inputs for projects in a subfolder, and a require-descendant input. (#2, #6, @kelly-sovacool)\nGuide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, @kelly-sovacool)"
+    "objectID": "LICENSE.html",
+    "href": "LICENSE.html",
+    "title": "MIT License",
+    "section": "",
+    "text": "MIT License\nCopyright (c) 2026 CCR Collaborative Bioinformatics Resource\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
   },
   {
     "objectID": "index.html",
@@ -19,6 +19,27 @@
     "title": "quarto-version-selector",
     "section": "Getting started",
     "text": "Getting started\n\nInstall the extension\nquarto add CCBR/quarto-version-selector\nEnable the filter in _quarto.yml:\nfilters:\n  - version-selector\n\n\nChoose a placement\nversion-selector:\n  placement: navbar-left   # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none\n\nnavbar-left (default): the start of the left navbar menu. Falls back to the right-hand navbar tools, or the top-left of the page if there is no navbar.\nnavbar-right: the start of the right-hand navbar tools (next to the GitHub icon, search, and dark-mode toggle). Falls back to the top-right of the page if there is no navbar.\nfixed-left / fixed-right: pinned to the top-left or top-right corner of the page.\nsidebar: the top of the docked sidebar. Falls back to navbar-left if the page has no sidebar.\nnone: only shown in an element you place yourself:\n::: {#version-selector}\n:::\n\n\n\nDeploy with GitHub Actions\n.github/workflows/docs-quarto.yml\nname: quarto-publish-versioned\non:\n  workflow_dispatch:\n  release:\n    types: [published]\n  push:\n    branches: [main]\nconcurrency:\n  group: docs-deploy\n  cancel-in-progress: false\npermissions:\n  contents: write\n  pages: write\njobs:\n  deploy-docs:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          fetch-depth: 0\n      - uses: quarto-dev/quarto-actions/setup@v2\n      - uses: CCBR/quarto-version-selector/.github/actions/deploy-version@main\n        with:\n          github-token: ${{ secrets.GITHUB_TOKEN }}\nThen configure GitHub Pages to publish from the gh-pages branch."
+  },
+  {
+    "objectID": "CHANGELOG.html#quarto-version-selector-1.0.0",
+    "href": "CHANGELOG.html#quarto-version-selector-1.0.0",
+    "title": "quarto-version-selector",
+    "section": "quarto-version-selector 1.0.0",
+    "text": "quarto-version-selector 1.0.0\nThis is the first release of quarto-version-selector 🎉\n\nQuarto extension version-selector adds a version dropdown to any Quarto HTML format, driven by a root versions.json. (#2, #6, @copilot, @kelly-sovacool)\n\nplacement options: navbar-left (default), navbar-right, sidebar (falls back to navbar-left on pages without a docked sidebar), fixed-left, fixed-right, and none. Unknown values warn and fall back to navbar-left. (#8, #11, #12, @kelly-sovacool)\n\nquarto-version-selector CLI deploys each version into its own subfolder of the docs branch. (#2, #6, #9, @copilot, @kelly-sovacool)\n\nCommands: get-version, deploy, alias, set-default, validate, and serve. serve previews the versioned site locally with your rendered site added as dev.\nversions.json is checked against a JSON schema every time it is read or written.\nIf the commit doesn’t descend from the latest release (e.g. after a squash or rebase merge), get-version warns and deploys dev. Use --require-descendant to make it fail instead. If release tags are missing, it gives an error suggesting git fetch --tags.\n\nComposite GitHub Action deploy-version renders and deploys the site. Release builds go out as major.minor, with latest pointing to the newest release, and main-branch builds go out as dev. It supports path/site-dir inputs for projects in a subfolder, and a require-descendant input. (#2, #6, @kelly-sovacool)\nGuide for switching an existing mkdocs + mike site to Quarto while keeping the versions mike already deployed. (#10, @kelly-sovacool)"
+  },
+  {
+    "objectID": "template.html",
+    "href": "template.html",
+    "title": "Version Selector Example",
+    "section": "",
+    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
+  },
+  {
+    "objectID": "template.html#usage",
+    "href": "template.html#usage",
+    "title": "Version Selector Example",
+    "section": "",
+    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
   },
   {
     "objectID": "mike.html",
@@ -91,13 +112,6 @@
     "text": "Rolling back\nNothing on gh-pages is deleted. To undo a Quarto deploy, revert its commit on the docs branch: each deploy is a single commit named docs: deploy &lt;version&gt;."
   },
   {
-    "objectID": "LICENSE.html",
-    "href": "LICENSE.html",
-    "title": "MIT License",
-    "section": "",
-    "text": "MIT License\nCopyright (c) 2026 CCR Collaborative Bioinformatics Resource\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
-  },
-  {
     "objectID": "usage.html",
     "href": "usage.html",
     "title": "Advanced Usage Guide",
@@ -138,19 +152,5 @@
     "title": "Advanced Usage Guide",
     "section": "CLI",
     "text": "CLI\npip install git+https://github.com/CCBR/quarto-version-selector.git\nquarto render\n# compute version/alias for the current commit (uses `gh` to find the latest release)\nquarto-version-selector get-version --release-tag v1.2.0\n# deploy _site to gh-pages/1.2 and gh-pages/latest, update versions.json, push\nquarto-version-selector deploy --version 1.2 --alias latest --set-default latest --push\n# add an alias to an existing version\nquarto-version-selector alias 1.2 stable --push\n# change where the site root redirects\nquarto-version-selector set-default latest --push\n# check versions.json on the docs branch (or pass a file path)\nquarto-version-selector validate\nversions.json must match versions.schema.json, and every version and alias name must be unique. deploy, alias, and set-default validate the existing file before changing the docs branch and validate the new file before writing it, so a malformed versions.json stops the deploy instead of being overwritten. Names must be single directory names (no /, .., or reserved root files such as index.html), and set-default targets must be listed in versions.json.\nRedeploying a version also refreshes all of its aliases. Deploys without --push stay on your local docs branch; later commands build on them, and the CLI refuses to continue if the local and remote docs branches have diverged.\n\nPreview locally\nserve previews the whole versioned site, including the version selector, without deploying:\nquarto render                                       # or: quarto render docs\nquarto-version-selector serve --site-dir _site      # or: --site-dir docs/_site\nIt copies the docs branch into a temporary directory, adds your rendered site as dev (change it with --version), and serves it at http://localhost:8000/dev/. Your repository, branches, and worktrees are not changed, and the copy is deleted when you stop the server. Without --site-dir, it serves the docs branch as is, including deploys you haven’t pushed yet. Re-run it after quarto render to pick up changes.\nThe site has to be served over HTTP. Opening the files directly (file://) does not work: browsers block the fetch() of versions.json, so no selector appears, and links to version folders such as ../1.2/ show a directory listing instead of index.html.\nRun quarto-version-selector &lt;command&gt; --help for all options. Deploys use a temporary git worktree, so your working tree is not touched."
-  },
-  {
-    "objectID": "template.html",
-    "href": "template.html",
-    "title": "Version Selector Example",
-    "section": "",
-    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
-  },
-  {
-    "objectID": "template.html#usage",
-    "href": "template.html#usage",
-    "title": "Version Selector Example",
-    "section": "",
-    "text": "Enable the filter in _quarto.yml:\nfilters:\n  - version-selector\nTo place the selector somewhere specific, add an element with id version-selector:\n::: {#version-selector}\n:::"
   }
 ]
