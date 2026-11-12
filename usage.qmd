@@ -24,7 +24,10 @@ The extension's JavaScript reads `versions.json` from the parent of the current 
 version-selector:
   versions-file: versions.json   # relative to the root of the docs branch
   placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none
+  label: ""                      # optional text before the current version, e.g. "v" or "Version"
 ```
+
+`label` is prepended to the current version in the dropdown button only (menu items are unchanged). A single character attaches directly (`v` gives `v1.2`); longer labels get a space (`Version` gives `Version 1.2`). It is wrapped in `span.quarto-version-selector-label` for custom styling.
 
 Placement details:
 
