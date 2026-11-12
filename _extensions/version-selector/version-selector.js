@@ -63,7 +63,7 @@
     function prefixNode(prefix) {
         prefix = (prefix || "").trim();
         if (!prefix) return null;
-        return el("span", { class: "quarto-version-selector-label" }, prefix.length > 1 ? prefix + " " : prefix);
+        return el("span", { class: "quarto-version-selector-label" }, Array.from(prefix).length > 1 ? prefix + " " : prefix);
     }
 
     function build(versions, current, siteRoot, relPath, prefix) {
