@@ -116,6 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <meta name="version-selector:versions-file" content="versions.json">
 <meta name="version-selector:placement" content="navbar-left">
+<meta name="version-selector:label" content="">
 
 
 </head>
@@ -396,7 +397,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="extension-options">Extension options</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version-selector</span><span class="kw">:</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">versions-file</span><span class="kw">:</span><span class="at"> versions.json</span><span class="co">   # relative to the root of the docs branch</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">placement</span><span class="kw">:</span><span class="at"> navbar-left</span><span class="co">         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">placement</span><span class="kw">:</span><span class="at"> navbar-left</span><span class="co">         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">""</span><span class="co">                      # optional text before the current version, e.g. "v" or "Version"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>label</code> is prepended to the current version in the dropdown button only (menu items are unchanged). A single character attaches directly (<code>v</code> gives <code>v1.2</code>); longer labels get a space (<code>Version</code> gives <code>Version 1.2</code>). It is wrapped in <code>span.quarto-version-selector-label</code> for custom styling.</p>
 <p>Placement details:</p>
 <ul>
 <li><code>navbar-left</code> (default): the start of the left navbar menu (before the <code>navbar: left:</code> links). If the navbar has no left menu, it goes in the right-hand navbar tools; with no navbar at all, it is pinned to the top-left of the page.</li>
