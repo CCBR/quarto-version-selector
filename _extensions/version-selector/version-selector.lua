@@ -5,6 +5,7 @@
 --   version-selector:
 --     versions-file: versions.json   # path relative to the site root of all versions
 --     placement: navbar-left         # navbar-left | navbar-right | fixed-left | fixed-right | sidebar | none
+--     label: ""                      # optional text before the current version, e.g. "v" or "Version"
 
 -- The extension's version is read from the VERSION file next to this script,
 -- the single source of truth also used by the Python package and release tooling.
@@ -27,6 +28,11 @@ local function meta_string(value, default)
         return default
     end
     return pandoc.utils.stringify(value)
+end
+
+-- Escape a string for use inside a double-quoted HTML attribute.
+local function escape_attr(value)
+    return (value:gsub("&", "&amp;"):gsub('"', "&quot;"):gsub("<", "&lt;"):gsub(">", "&gt;"))
 end
 
 function Meta(meta)
@@ -52,6 +58,7 @@ function Meta(meta)
         ))
         placement = "navbar-left"
     end
+    local label = meta_string(opts["label"], ""):gsub("^%s+", ""):gsub("%s+$", "")
 
     quarto.doc.add_html_dependency({
         name = "version-selector",
@@ -61,8 +68,9 @@ function Meta(meta)
     })
     quarto.doc.include_text("in-header", string.format(
         '<meta name="version-selector:versions-file" content="%s">\n' ..
-        '<meta name="version-selector:placement" content="%s">\n',
-        versions_file, placement
+        '<meta name="version-selector:placement" content="%s">\n' ..
+        '<meta name="version-selector:label" content="%s">\n',
+        escape_attr(versions_file), placement, escape_attr(label)
     ))
     return meta
 end
